@@ -1301,6 +1301,42 @@
 
   .admin-view { max-width: 700px; margin: 0 auto; }
 
+  /* ACTIVITY LOG */
+  .activity-feed { display: flex; flex-direction: column; gap: 8px; }
+  .activity-entry {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    grid-template-rows: auto auto;
+    gap: 4px 12px;
+    align-items: start;
+  }
+  .activity-badge {
+    grid-row: 1 / 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    align-self: center;
+  }
+  .activity-details { font-size: 13px; line-height: 1.4; }
+  .activity-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 12px;
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1310,25 +1346,65 @@
 <div class="modal-overlay" id="loginModal">
   <div class="modal" style="width:380px">
     <div class="modal-header">
-      <span class="modal-title">Sign In</span>
+      <span class="modal-title" id="loginModalTitle">Sign In</span>
       <button class="modal-close" onclick="closeModal('loginModal')">×</button>
     </div>
-    <div class="modal-body">
-      <div class="login-error" id="loginError">Incorrect username or password.</div>
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <input class="form-input" id="loginUsername" placeholder="username" autocomplete="username"
-          onkeydown="if(event.key==='Enter')doLogin()" />
+    <!-- SIGN IN PANEL -->
+    <div id="loginPanel">
+      <div class="modal-body">
+        <div class="login-error" id="loginError">Incorrect username or password.</div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" id="loginUsername" placeholder="username" autocomplete="username"
+            onkeydown="if(event.key==='Enter')doLogin()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="loginPassword" type="password" placeholder="password" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()" />
+        </div>
+        <div style="text-align:center;margin-top:4px">
+          <a href="#" style="font-size:12px;color:var(--muted);text-decoration:none" onclick="showLoginPanel('create');return false">
+            Don't have an account? <span style="color:var(--accent)">Create one</span>
+          </a>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input class="form-input" id="loginPassword" type="password" placeholder="password" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter')doLogin()" />
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('loginModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('loginModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
+    <!-- CREATE ACCOUNT PANEL -->
+    <div id="createPanel" style="display:none">
+      <div class="modal-body">
+        <div class="login-error" id="createError"></div>
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" id="createUsername" placeholder="choose a username" autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email <span style="color:var(--muted);font-size:11px">(optional)</span></label>
+          <input class="form-input" id="createEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="createPassword" type="password" placeholder="at least 4 characters" autocomplete="new-password" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input class="form-input" id="createConfirm" type="password" placeholder="confirm password" autocomplete="new-password"
+            onkeydown="if(event.key==='Enter')doCreateAccount()" />
+        </div>
+        <div style="text-align:center;margin-top:4px">
+          <a href="#" style="font-size:12px;color:var(--muted);text-decoration:none" onclick="showLoginPanel('signin');return false">
+            Already have an account? <span style="color:var(--accent)">Sign in</span>
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('loginModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="doCreateAccount()">Create Account</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1343,6 +1419,7 @@
       <button class="view-btn active" id="btnAll" onclick="switchTab('all')">ALL TEAMS</button>
       <button class="view-btn" id="btnDraft" onclick="switchTab('draft')">DRAFT PICKS</button>
       <button class="view-btn" id="btnDB" onclick="switchTab('database')">⚾ DRAFT ROOM</button>
+      <button class="view-btn" id="btnActivity" onclick="switchTab('activity')">📋 ACTIVITY</button>
       <button class="view-btn" id="btnAdmin" onclick="switchTab('admin')" style="display:none">⚙ ADMIN</button>
     </div>
     <button class="btn btn-primary" id="addPlayerBtn" onclick="openAddPlayerModal()" style="display:none">+ Add Player</button>
@@ -1466,6 +1543,7 @@
 // ===== AUTH =====
 const AUTH_KEY = 'farmLeagueAuth2026';
 const SESSION_KEY = 'farmLeagueSession2026';
+const ACTIVITY_KEY = 'farmLeagueActivity2026';
 
 function defaultAuthData() {
   return {
@@ -1503,11 +1581,53 @@ function initSession() {
 }
 
 function openLoginModal() {
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('loginError').classList.remove('show');
+  showLoginPanel('signin');
   document.getElementById('loginModal').classList.add('open');
   setTimeout(() => document.getElementById('loginUsername').focus(), 50);
+}
+
+function showLoginPanel(which) {
+  const isCreate = which === 'create';
+  document.getElementById('loginModalTitle').textContent = isCreate ? 'Create Account' : 'Sign In';
+  document.getElementById('loginPanel').style.display = isCreate ? 'none' : 'block';
+  document.getElementById('createPanel').style.display = isCreate ? 'block' : 'none';
+  if (!isCreate) {
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').classList.remove('show');
+  } else {
+    document.getElementById('createUsername').value = '';
+    document.getElementById('createEmail').value = '';
+    document.getElementById('createPassword').value = '';
+    document.getElementById('createConfirm').value = '';
+    document.getElementById('createError').classList.remove('show');
+  }
+}
+
+function doCreateAccount() {
+  const username = document.getElementById('createUsername').value.trim();
+  const email = document.getElementById('createEmail').value.trim();
+  const password = document.getElementById('createPassword').value;
+  const confirm = document.getElementById('createConfirm').value;
+  const errEl = document.getElementById('createError');
+  const showErr = msg => { errEl.textContent = msg; errEl.classList.add('show'); };
+
+  if (!username) { showErr('Username is required.'); return; }
+  if (authData.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
+    showErr('Username already taken. Choose another.'); return;
+  }
+  if (password.length < 4) { showErr('Password must be at least 4 characters.'); return; }
+  if (password !== confirm) { showErr('Passwords do not match.'); return; }
+
+  const newUser = { username, password, email, role: 'user', ownerId: null };
+  authData.users.push(newUser);
+  saveAuthData(authData);
+
+  currentUser = newUser;
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(username));
+  closeModal('loginModal');
+  applyAuthUI();
+  render();
 }
 
 function doLogin() {
@@ -1712,6 +1832,77 @@ function saveAdminUsers() {
   renderAdminPanel(document.getElementById('mainContent'));
 }
 
+// ===== ACTIVITY LOG =====
+function logActivity(type, details) {
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]'); } catch(e) {}
+  log.unshift({
+    ts: Date.now(),
+    type,
+    actor: currentUser ? currentUser.username : 'system',
+    details
+  });
+  if (log.length > 200) log = log.slice(0, 200);
+  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
+}
+
+function renderActivityLog(content) {
+  content.style.padding = '24px';
+  content.style.overflow = 'auto';
+  content.style.display = 'block';
+
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]'); } catch(e) {}
+
+  const TYPE_META = {
+    trade:    { label: 'TRADE',  color: '#e8c84a' },
+    add:      { label: 'ADD',    color: '#4ae8a0' },
+    drop:     { label: 'DROP',   color: '#e84a4a' },
+    draft:    { label: 'DRAFT',  color: '#4ab8e8' },
+    undraft:  { label: 'UNDRAFT',color: '#e88c4a' },
+    roster:   { label: 'ROSTER', color: '#a04ae8' },
+  };
+
+  const fmtDate = ts => {
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  };
+
+  const rows = log.length === 0
+    ? `<div style="padding:40px;text-align:center;color:var(--muted);font-size:14px">No activity recorded yet.</div>`
+    : log.map(entry => {
+        const m = TYPE_META[entry.type] || { label: entry.type.toUpperCase(), color: 'var(--muted)' };
+        return `
+          <div class="activity-entry">
+            <span class="activity-badge" style="background:${m.color}20;color:${m.color};border:1px solid ${m.color}40">${m.label}</span>
+            <div class="activity-details">${entry.details}</div>
+            <div class="activity-meta">
+              <span>${entry.actor}</span>
+              <span>${fmtDate(entry.ts)}</span>
+            </div>
+          </div>`;
+      }).join('');
+
+  content.innerHTML = `
+    <div style="max-width:720px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--accent)">Activity Log</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${log.length} event${log.length !== 1 ? 's' : ''} recorded</div>
+        </div>
+        ${isAdmin() ? `<button class="btn" style="color:var(--danger);border-color:var(--danger)" onclick="clearActivityLog()">Clear Log</button>` : ''}
+      </div>
+      <div class="activity-feed">${rows}</div>
+    </div>`;
+}
+
+function clearActivityLog() {
+  if (!confirm('Clear the entire activity log?')) return;
+  localStorage.removeItem(ACTIVITY_KEY);
+  renderActivityLog(document.getElementById('mainContent'));
+}
+
 // ===== DATA =====
 const OWNER_COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11'];
 
@@ -1886,6 +2077,8 @@ function renderContent() {
     renderDraftPicks(content);
   } else if (currentTab === 'database') {
     renderDraftRoom(content);
+  } else if (currentTab === 'activity') {
+    renderActivityLog(content);
   } else if (currentTab === 'admin') {
     renderAdminPanel(content);
   }
@@ -2094,6 +2287,7 @@ function switchTab(tab) {
   document.getElementById('btnAll').classList.toggle('active', tab === 'all');
   document.getElementById('btnDraft').classList.toggle('active', tab === 'draft');
   document.getElementById('btnDB').classList.toggle('active', tab === 'database');
+  document.getElementById('btnActivity').classList.toggle('active', tab === 'activity');
   document.getElementById('btnAdmin').classList.toggle('active', tab === 'admin');
   render();
 }
@@ -2175,6 +2369,7 @@ function saveRoster() {
   owner.roster = Array.from(playerInputs).map(i => i.value.trim()).filter(v => v);
   owner.ptbn = Array.from(ptbnInputs).map(i => i.value.trim()).filter(v => v);
 
+  logActivity('roster', `Updated ${owner.name}'s roster (${owner.roster.filter(p=>p).length} prospects, ${owner.ptbn.length} picks)`);
   save();
   closeModal('editModal');
   render();
@@ -2201,8 +2396,10 @@ function confirmAddPlayer() {
   const owner = leagueData.owners.find(o => o.id === ownerId);
   if (ptbn) {
     owner.ptbn.splice(Math.max(0, pos), 0, ptbn);
+    logActivity('add', `Added PTBN pick <strong>${ptbn}</strong> to ${owner.name}'s team`);
   } else {
     owner.roster.splice(Math.max(0, pos), 0, name);
+    logActivity('add', `Added prospect <strong>${name}</strong> to ${owner.name}'s roster`);
   }
 
   save();
@@ -2301,6 +2498,9 @@ function executeTrade() {
     }
   });
 
+  const s1Summary = s1.items.map(it => it.label).join(', ') || 'nothing';
+  const s2Summary = s2.items.map(it => it.label).join(', ') || 'nothing';
+  logActivity('trade', `<strong>${owner1.name}</strong> receives ${s2Summary} · <strong>${owner2.name}</strong> receives ${s1Summary}`);
   save();
   closeModal('tradeModal');
   render();
@@ -2579,6 +2779,7 @@ function draftProspect(name) {
     owner.roster.push(name);
   }
 
+  logActivity('draft', `<strong>${name}</strong> drafted to ${owner.name}'s roster`);
   save();
   selectedProspect = prospectDB.find(p => p.Name === name) || selectedProspect;
   renderDraftRoom(document.getElementById('mainContent'));
@@ -2589,6 +2790,7 @@ function undraftProspect(name) {
   if (!owner) return;
   const idx = owner.roster.findIndex(r => r && r.trim().toLowerCase() === name.trim().toLowerCase());
   if (idx >= 0) owner.roster[idx] = ''; // restore as empty slot
+  logActivity('undraft', `<strong>${name}</strong> removed from ${owner.name}'s roster`);
   save();
   selectedProspect = prospectDB.find(p => p.Name === name) || selectedProspect;
   renderDraftRoom(document.getElementById('mainContent'));
