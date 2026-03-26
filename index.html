@@ -1167,46 +1167,7 @@
     .view-btn { font-size: 10px; padding: 4px 6px; }
   }
 
-  /* ===== LOGIN OVERLAY ===== */
-  .login-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-  }
-  .login-overlay.open { display: flex; }
-
-  .login-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 36px 40px;
-    width: 380px;
-    max-width: 95vw;
-  }
-
-  .login-logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    letter-spacing: 3px;
-    color: var(--accent);
-    text-align: center;
-    margin-bottom: 4px;
-  }
-
-  .login-sub {
-    text-align: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 2px;
-    margin-bottom: 28px;
-  }
-
+  /* ===== LOGIN MODAL ===== */
   .login-error {
     background: rgba(232,74,74,0.1);
     border: 1px solid rgba(232,74,74,0.3);
@@ -1345,23 +1306,30 @@
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
-<div class="login-overlay open" id="loginOverlay">
-  <div class="login-card">
-    <div class="login-logo">⚾ Farm Team League</div>
-    <div class="login-sub">2026 · SIGN IN</div>
-    <div class="login-error" id="loginError">Incorrect username or password.</div>
-    <div class="form-group">
-      <label class="form-label">Username</label>
-      <input class="form-input" id="loginUsername" placeholder="username" autocomplete="username"
-        onkeydown="if(event.key==='Enter')doLogin()" />
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-header">
+      <span class="modal-title">Sign In</span>
+      <button class="modal-close" onclick="closeModal('loginModal')">×</button>
     </div>
-    <div class="form-group">
-      <label class="form-label">Password</label>
-      <input class="form-input" id="loginPassword" type="password" placeholder="password" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')doLogin()" />
+    <div class="modal-body">
+      <div class="login-error" id="loginError">Incorrect username or password.</div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" id="loginUsername" placeholder="username" autocomplete="username"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="loginPassword" type="password" placeholder="password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
     </div>
-    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('loginModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
+    </div>
   </div>
 </div>
 
@@ -1383,6 +1351,7 @@
       <span class="user-chip-name" id="userChipName"></span>
       <span class="user-chip-role" id="userChipRole"></span>
     </div>
+    <button class="btn" id="signInBtn" onclick="openLoginModal()">Sign In</button>
     <button class="btn-logout" id="logoutBtn" onclick="doLogout()" style="display:none">Sign Out</button>
   </div>
 </header>
@@ -1533,6 +1502,14 @@ function initSession() {
   return false;
 }
 
+function openLoginModal() {
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').classList.remove('show');
+  document.getElementById('loginModal').classList.add('open');
+  setTimeout(() => document.getElementById('loginUsername').focus(), 50);
+}
+
 function doLogin() {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -1545,7 +1522,7 @@ function doLogin() {
   err.classList.remove('show');
   currentUser = user;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(user.username));
-  document.getElementById('loginOverlay').classList.remove('open');
+  closeModal('loginModal');
   applyAuthUI();
   render();
 }
@@ -1553,10 +1530,8 @@ function doLogin() {
 function doLogout() {
   currentUser = null;
   sessionStorage.removeItem(SESSION_KEY);
-  document.getElementById('loginUsername').value = '';
-  document.getElementById('loginPassword').value = '';
-  document.getElementById('loginOverlay').classList.add('open');
   applyAuthUI();
+  render();
 }
 
 function isAdmin() { return currentUser && currentUser.role === 'admin'; }
@@ -1568,18 +1543,21 @@ function canEditOwner(ownerId) {
 }
 
 function applyAuthUI() {
-  if (!currentUser) return;
-  const i = leagueData.owners.findIndex(o => o.id === currentUser.ownerId);
-  const colorClass = i >= 0 ? OWNER_COLORS[i % 12] : 'c1';
-  const chip = document.getElementById('userChip');
-  chip.style.display = 'flex';
-  document.getElementById('userChipAvatar').className = `user-chip-avatar ${colorClass}`;
-  document.getElementById('userChipAvatar').textContent = currentUser.username[0].toUpperCase();
-  document.getElementById('userChipName').textContent = currentUser.username;
-  document.getElementById('userChipRole').textContent = isAdmin() ? '· admin' : '';
-  document.getElementById('logoutBtn').style.display = 'block';
-  document.getElementById('addPlayerBtn').style.display = isAdmin() ? 'block' : 'none';
-  document.getElementById('btnAdmin').style.display = isAdmin() ? 'inline-block' : 'none';
+  const loggedIn = !!currentUser;
+  document.getElementById('signInBtn').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('logoutBtn').style.display = loggedIn ? 'block' : 'none';
+  document.getElementById('userChip').style.display = loggedIn ? 'flex' : 'none';
+  document.getElementById('addPlayerBtn').style.display = (loggedIn && isAdmin()) ? 'block' : 'none';
+  document.getElementById('btnAdmin').style.display = (loggedIn && isAdmin()) ? 'inline-block' : 'none';
+
+  if (loggedIn) {
+    const i = leagueData.owners.findIndex(o => o.id === currentUser.ownerId);
+    const colorClass = i >= 0 ? OWNER_COLORS[i % 12] : 'c1';
+    document.getElementById('userChipAvatar').className = `user-chip-avatar ${colorClass}`;
+    document.getElementById('userChipAvatar').textContent = currentUser.username[0].toUpperCase();
+    document.getElementById('userChipName').textContent = currentUser.username;
+    document.getElementById('userChipRole').textContent = isAdmin() ? '· admin' : '';
+  }
 }
 
 // ===== CHANGE PASSWORD =====
@@ -2676,14 +2654,9 @@ function downloadTemplate() {
 }
 
 // ===== INIT =====
-if (initSession()) {
-  document.getElementById('loginOverlay').classList.remove('open');
-  applyAuthUI();
-  render();
-} else {
-  // Show login; focus username field
-  setTimeout(() => document.getElementById('loginUsername').focus(), 100);
-}
+initSession();
+applyAuthUI();
+render();
 </script>
 </body>
 </html>
