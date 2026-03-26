@@ -1167,10 +1167,203 @@
     .view-btn { font-size: 10px; padding: 4px 6px; }
   }
 
+  /* ===== LOGIN OVERLAY ===== */
+  .login-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .login-overlay.open { display: flex; }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 40px;
+    width: 380px;
+    max-width: 95vw;
+  }
+
+  .login-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .login-sub {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+
+  .login-error {
+    background: rgba(232,74,74,0.1);
+    border: 1px solid rgba(232,74,74,0.3);
+    border-radius: 6px;
+    color: var(--danger);
+    font-size: 13px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .login-error.show { display: block; }
+
+  .login-btn {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+  .login-btn:hover { background: #d4b43a; }
+
+  /* ===== HEADER USER CHIP ===== */
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px 4px 6px;
+    font-size: 13px;
+  }
+
+  .user-chip-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .user-chip-name { font-weight: 500; }
+
+  .user-chip-role {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .btn-logout {
+    padding: 5px 10px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ===== ADMIN PANEL ===== */
+  .admin-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .admin-user-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+  .admin-user-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+  }
+
+  .admin-user-row .form-input {
+    padding: 6px 10px;
+    font-size: 13px;
+    background: var(--bg);
+  }
+
+  .admin-user-remove {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 2px 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .admin-user-remove:hover { color: var(--danger); }
+
+  .admin-user-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(232,200,74,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,200,74,0.3);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .admin-view { max-width: 700px; margin: 0 auto; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay open" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-logo">⚾ Farm Team League</div>
+    <div class="login-sub">2026 · SIGN IN</div>
+    <div class="login-error" id="loginError">Incorrect username or password.</div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input class="form-input" id="loginUsername" placeholder="username" autocomplete="username"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" id="loginPassword" type="password" placeholder="password" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
 
 <header>
   <div class="logo">
@@ -1182,8 +1375,15 @@
       <button class="view-btn active" id="btnAll" onclick="switchTab('all')">ALL TEAMS</button>
       <button class="view-btn" id="btnDraft" onclick="switchTab('draft')">DRAFT PICKS</button>
       <button class="view-btn" id="btnDB" onclick="switchTab('database')">⚾ DRAFT ROOM</button>
+      <button class="view-btn" id="btnAdmin" onclick="switchTab('admin')" style="display:none">⚙ ADMIN</button>
     </div>
-    <button class="btn btn-primary" onclick="openAddPlayerModal()">+ Add Player</button>
+    <button class="btn btn-primary" id="addPlayerBtn" onclick="openAddPlayerModal()" style="display:none">+ Add Player</button>
+    <div class="user-chip" id="userChip" style="display:none">
+      <div class="user-chip-avatar c1" id="userChipAvatar">?</div>
+      <span class="user-chip-name" id="userChipName"></span>
+      <span class="user-chip-role" id="userChipRole"></span>
+    </div>
+    <button class="btn-logout" id="logoutBtn" onclick="doLogout()" style="display:none">Sign Out</button>
   </div>
 </header>
 
@@ -1264,7 +1464,276 @@
   </div>
 </div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Change Password</span>
+      <button class="modal-close" onclick="closeModal('changePasswordModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <input class="form-input" id="cpCurrent" type="password" placeholder="current password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input class="form-input" id="cpNew" type="password" placeholder="new password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input class="form-input" id="cpConfirm" type="password" placeholder="confirm new password" />
+      </div>
+      <div class="login-error" id="cpError" style="display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('changePasswordModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doChangePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ===== AUTH =====
+const AUTH_KEY = 'farmLeagueAuth2026';
+const SESSION_KEY = 'farmLeagueSession2026';
+
+function defaultAuthData() {
+  return {
+    users: [
+      { username: 'admin', password: 'admin2026', email: '', role: 'admin', ownerId: null }
+    ]
+  };
+}
+
+function loadAuthData() {
+  try {
+    const stored = localStorage.getItem(AUTH_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch(e) {}
+  return defaultAuthData();
+}
+
+function saveAuthData(data) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(data));
+}
+
+let authData = loadAuthData();
+let currentUser = null;
+
+function initSession() {
+  try {
+    const s = sessionStorage.getItem(SESSION_KEY);
+    if (s) {
+      const username = JSON.parse(s);
+      const user = authData.users.find(u => u.username === username);
+      if (user) { currentUser = user; return true; }
+    }
+  } catch(e) {}
+  return false;
+}
+
+function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+  const user = authData.users.find(u => u.username === username && u.password === password);
+  if (!user) {
+    err.classList.add('show');
+    return;
+  }
+  err.classList.remove('show');
+  currentUser = user;
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user.username));
+  document.getElementById('loginOverlay').classList.remove('open');
+  applyAuthUI();
+  render();
+}
+
+function doLogout() {
+  currentUser = null;
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginOverlay').classList.add('open');
+  applyAuthUI();
+}
+
+function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+
+function canEditOwner(ownerId) {
+  if (!currentUser) return false;
+  if (isAdmin()) return true;
+  return currentUser.ownerId === ownerId;
+}
+
+function applyAuthUI() {
+  if (!currentUser) return;
+  const i = leagueData.owners.findIndex(o => o.id === currentUser.ownerId);
+  const colorClass = i >= 0 ? OWNER_COLORS[i % 12] : 'c1';
+  const chip = document.getElementById('userChip');
+  chip.style.display = 'flex';
+  document.getElementById('userChipAvatar').className = `user-chip-avatar ${colorClass}`;
+  document.getElementById('userChipAvatar').textContent = currentUser.username[0].toUpperCase();
+  document.getElementById('userChipName').textContent = currentUser.username;
+  document.getElementById('userChipRole').textContent = isAdmin() ? '· admin' : '';
+  document.getElementById('logoutBtn').style.display = 'block';
+  document.getElementById('addPlayerBtn').style.display = isAdmin() ? 'block' : 'none';
+  document.getElementById('btnAdmin').style.display = isAdmin() ? 'inline-block' : 'none';
+}
+
+// ===== CHANGE PASSWORD =====
+function openChangePasswordModal() {
+  document.getElementById('cpCurrent').value = '';
+  document.getElementById('cpNew').value = '';
+  document.getElementById('cpConfirm').value = '';
+  document.getElementById('cpError').style.display = 'none';
+  document.getElementById('changePasswordModal').classList.add('open');
+}
+
+function doChangePassword() {
+  const current = document.getElementById('cpCurrent').value;
+  const next = document.getElementById('cpNew').value;
+  const confirm = document.getElementById('cpConfirm').value;
+  const errEl = document.getElementById('cpError');
+  const show = msg => { errEl.textContent = msg; errEl.style.display = 'block'; };
+
+  if (current !== currentUser.password) { show('Current password is incorrect.'); return; }
+  if (next.length < 4) { show('New password must be at least 4 characters.'); return; }
+  if (next !== confirm) { show('Passwords do not match.'); return; }
+
+  const user = authData.users.find(u => u.username === currentUser.username);
+  user.password = next;
+  currentUser.password = next;
+  saveAuthData(authData);
+  closeModal('changePasswordModal');
+  alert('Password updated.');
+}
+
+// ===== ADMIN PANEL =====
+function renderAdminPanel(content) {
+  content.style.padding = '24px';
+  content.style.overflow = 'auto';
+  content.style.display = 'block';
+
+  const ownerOptions = (selected) =>
+    `<option value="">— No Team —</option>` +
+    leagueData.owners.map(o =>
+      `<option value="${o.id}" ${selected===o.id?'selected':''}>${o.name}</option>`
+    ).join('');
+
+  const userRows = authData.users.map((u, idx) => {
+    const isAdminUser = u.role === 'admin';
+    return `
+      <div class="admin-user-row">
+        ${isAdminUser ? `<span class="admin-user-badge">ADMIN</span>` : ''}
+        <input class="form-input" style="flex:1;min-width:80px" placeholder="username"
+          value="${u.username}" onchange="updateAdminUser(${idx},'username',this.value)" />
+        <input class="form-input" style="flex:1;min-width:120px" placeholder="email"
+          value="${u.email||''}" onchange="updateAdminUser(${idx},'email',this.value)" />
+        <input class="form-input" style="flex:1;min-width:110px" type="password" placeholder="password"
+          value="${u.password}" onchange="updateAdminUser(${idx},'password',this.value)" />
+        <select class="form-input" style="flex:1;min-width:110px"
+          onchange="updateAdminUser(${idx},'ownerId',this.value===''?null:parseInt(this.value))">
+          ${ownerOptions(u.ownerId)}
+        </select>
+        ${isAdminUser ? '' : `<button class="admin-user-remove" onclick="removeAdminUser(${idx})" title="Remove user">×</button>`}
+      </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="admin-view">
+      <div class="stats-bar" style="margin-bottom:24px">
+        <div class="stat-chip">
+          <div class="stat-chip-val">${authData.users.length}</div>
+          <div class="stat-chip-label">Users</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-val">${authData.users.filter(u=>u.ownerId!==null).length}</div>
+          <div class="stat-chip-label">Linked</div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-val">${leagueData.owners.length - authData.users.filter(u=>u.ownerId!==null).length}</div>
+          <div class="stat-chip-label">Unlinked Teams</div>
+        </div>
+      </div>
+
+      <div class="roster-section" style="margin-bottom:20px">
+        <div class="section-title">
+          <span>User Accounts</span>
+          <button class="btn" style="font-size:11px;padding:4px 10px" onclick="addAdminUser()">+ Add User</button>
+        </div>
+        <div style="padding:16px">
+          <div style="display:flex;gap:10px;margin-bottom:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;padding:0 4px">
+            <span style="flex:1;min-width:80px">USERNAME</span>
+            <span style="flex:1;min-width:120px">EMAIL</span>
+            <span style="flex:1;min-width:110px">PASSWORD</span>
+            <span style="flex:1;min-width:110px">LINKED TEAM</span>
+            <span style="width:28px"></span>
+          </div>
+          <div class="admin-user-list">${userRows}</div>
+          <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="saveAdminUsers()">Save Changes</button>
+        </div>
+      </div>
+
+      <div class="roster-section">
+        <div class="section-title"><span>Team — Owner Mapping</span></div>
+        <div style="padding:0">
+          ${leagueData.owners.map((o, i) => {
+            const linked = authData.users.find(u => u.ownerId === o.id);
+            return `
+              <div class="roster-full-item">
+                <div class="owner-avatar ${OWNER_COLORS[i%12]}" style="border-radius:6px;flex-shrink:0">${o.name[0]}</div>
+                <div class="roster-full-name">${o.name}</div>
+                ${linked
+                  ? `<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2)">${linked.username}${linked.email?' · '+linked.email:''}</span>`
+                  : `<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">— not linked —</span>`}
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div class="admin-section-title">My Account</div>
+        <button class="btn" onclick="openChangePasswordModal()">Change My Password</button>
+      </div>
+    </div>`;
+}
+
+function updateAdminUser(idx, field, value) {
+  authData.users[idx][field] = value;
+}
+
+function addAdminUser() {
+  authData.users.push({ username: '', password: 'changeme', email: '', role: 'user', ownerId: null });
+  renderAdminPanel(document.getElementById('mainContent'));
+}
+
+function removeAdminUser(idx) {
+  if (!confirm(`Remove user "${authData.users[idx].username}"?`)) return;
+  authData.users.splice(idx, 1);
+  saveAuthData(authData);
+  renderAdminPanel(document.getElementById('mainContent'));
+}
+
+function saveAdminUsers() {
+  // Collect all current input values from DOM before saving
+  document.querySelectorAll('.admin-user-list .admin-user-row').forEach((row, idx) => {
+    const inputs = row.querySelectorAll('input,select');
+    // inputs order: username, email, password, ownerId select
+    if (inputs[0]) authData.users[idx].username = inputs[0].value.trim();
+    if (inputs[1]) authData.users[idx].email = inputs[1].value.trim();
+    if (inputs[2]) authData.users[idx].password = inputs[2].value;
+    if (inputs[3]) {
+      const v = inputs[3].value;
+      authData.users[idx].ownerId = v === '' ? null : parseInt(v);
+    }
+  });
+  saveAuthData(authData);
+  alert('Users saved.');
+  renderAdminPanel(document.getElementById('mainContent'));
+}
+
 // ===== DATA =====
 const OWNER_COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11'];
 
@@ -1415,12 +1884,14 @@ function renderSidebar() {
       </div>`;
   });
 
-  sb.innerHTML += `
-    <div class="sidebar-label" style="margin-top:12px">Actions</div>
-    <div class="owner-item" onclick="openTradeModal()" style="color:var(--accent2)">
-      <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;">⇄</div>
-      <div class="owner-name">Trade Builder</div>
-    </div>`;
+  if (isAdmin()) {
+    sb.innerHTML += `
+      <div class="sidebar-label" style="margin-top:12px">Actions</div>
+      <div class="owner-item" onclick="openTradeModal()" style="color:var(--accent2)">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;">⇄</div>
+        <div class="owner-name">Trade Builder</div>
+      </div>`;
+  }
 }
 
 function renderContent() {
@@ -1437,6 +1908,8 @@ function renderContent() {
     renderDraftPicks(content);
   } else if (currentTab === 'database') {
     renderDraftRoom(content);
+  } else if (currentTab === 'admin') {
+    renderAdminPanel(content);
   }
 }
 
@@ -1506,7 +1979,7 @@ function renderAllTeams(content) {
           <div class="team-card-owner">${owner.name}'s Farm Team</div>
           <div class="team-card-meta">${filledCount} prospects · ${owner.roster.length} slots · ${owner.ptbn.length} picks</div>
         </div>
-        <button class="team-card-edit" onclick="openEditModal(${owner.id}); event.stopPropagation();">Edit</button>
+        ${canEditOwner(owner.id) ? `<button class="team-card-edit" onclick="openEditModal(${owner.id}); event.stopPropagation();">Edit</button>` : ''}
       </div>
       <div class="team-card-roster">${rosterHtml}</div>`;
 
@@ -1610,7 +2083,7 @@ function renderSingleOwner(content) {
           <div class="team-title">${owner.name}'s Farm Team</div>
           <div class="team-subtitle">${filledCount} prospects · ${emptyCount > 0 ? emptyCount + ' empty slots · ' : ''}${owner.ptbn.length} PTBN picks</div>
         </div>
-        <button class="btn btn-primary" style="margin-left:auto" onclick="openEditModal(${owner.id})">Edit Roster</button>
+        ${canEditOwner(owner.id) ? `<button class="btn btn-primary" style="margin-left:auto" onclick="openEditModal(${owner.id})">Edit Roster</button>` : ''}
       </div>
 
       <div class="roster-section" style="margin-bottom:18px">
@@ -1643,6 +2116,7 @@ function switchTab(tab) {
   document.getElementById('btnAll').classList.toggle('active', tab === 'all');
   document.getElementById('btnDraft').classList.toggle('active', tab === 'draft');
   document.getElementById('btnDB').classList.toggle('active', tab === 'database');
+  document.getElementById('btnAdmin').classList.toggle('active', tab === 'admin');
   render();
 }
 
@@ -2202,7 +2676,14 @@ function downloadTemplate() {
 }
 
 // ===== INIT =====
-render();
+if (initSession()) {
+  document.getElementById('loginOverlay').classList.remove('open');
+  applyAuthUI();
+  render();
+} else {
+  // Show login; focus username field
+  setTimeout(() => document.getElementById('loginUsername').focus(), 100);
+}
 </script>
 </body>
 </html>
