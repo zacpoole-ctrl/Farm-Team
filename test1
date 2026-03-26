@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm Team League</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #2a2f3d;
+    --accent: #e8c84a;
+    --accent2: #4ae8a0;
+    --danger: #e84a4a;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --card-h: 340px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-badge {
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 3px;
+  }
+
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  .view-toggle {
+    display: flex;
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .view-btn {
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+  }
+
+  .view-btn.active {
+    background: var(--surface2);
+    color: var(--accent);
+  }
+
+  /* MAIN LAYOUT */
+  .layout { display: flex; height: calc(100vh - 60px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 0;
+  }
+
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 10px 16px 6px;
+    text-transform: uppercase;
+  }
+
+  .owner-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .owner-item:hover { background: var(--surface2); }
+  .owner-item.active {
+    border-left-color: var(--accent);
+    background: var(--surface2);
+  }
+
+  .owner-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .owner-name {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .owner-count {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 10px;
+  }
+
+  /* CONTENT */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* GRID VIEW */
+  .grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  /* TEAM CARD */
+  .team-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+
+  .team-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .team-card-header {
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .team-card-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .team-card-info { flex: 1; }
+  .team-card-owner { font-weight: 600; font-size: 15px; }
+  .team-card-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .team-card-edit {
+    padding: 5px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    transition: all 0.15s;
+  }
+  .team-card-edit:hover { border-color: var(--accent); color: var(--accent); }
+
+  .team-card-roster {
+    padding: 10px 0;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .roster-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 16px;
+    gap: 10px;
+    transition: background 0.1s;
+    cursor: default;
+  }
+
+  .roster-item:hover { background: var(--surface2); }
+
+  .roster-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 22px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .roster-name { font-size: 13px; font-weight: 400; flex: 1; }
+
+  .roster-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .tag-ptbn {
+    background: rgba(232, 200, 74, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(232, 200, 74, 0.3);
+  }
+
+  .tag-player {
+    background: rgba(74, 232, 160, 0.08);
+    color: var(--accent2);
+    border: 1px solid rgba(74, 232, 160, 0.2);
+  }
+
+  /* SINGLE TEAM VIEW */
+  .single-view { max-width: 700px; margin: 0 auto; }
+
+  .team-header-full {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 28px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .team-header-avatar-lg {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--bg);
+  }
+
+  .team-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 2px; }
+  .team-subtitle { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+  .roster-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .section-title {
+    padding: 12px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .roster-full-item {
+    display: flex;
+    align-items: center;
+    padding: 11px 20px;
+    gap: 14px;
+    border-bottom: 1px solid rgba(42,47,61,0.5);
+    transition: background 0.1s;
+  }
+
+  .roster-full-item:last-child { border-bottom: none; }
+  .roster-full-item:hover { background: var(--surface2); }
+
+  .roster-full-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--muted);
+    width: 30px;
+    text-align: center;
+  }
+
+  .roster-full-name { font-size: 15px; font-weight: 500; flex: 1; }
+
+  /* ALL TEAMS VIEW */
+  .all-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  /* DRAFT VIEW */
+  .draft-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .draft-column {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .draft-col-header {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+  }
+
+  .draft-col-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    color: var(--bg);
+    flex-shrink: 0;
+  }
+
+  .draft-col-name { font-size: 13px; font-weight: 600; }
+
+  .draft-pick-list { padding: 8px 0; }
+
+  .draft-pick {
+    padding: 6px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pick-year {
+    width: 38px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .pick-from {
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  /* SEARCH + FILTER BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: #d4b43a; border-color: #d4b43a; color: var(--bg); }
+
+  .btn-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(232,74,74,0.1); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 88vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1.5px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 22px;
+    line-height: 1;
+    padding: 2px;
+    transition: color 0.15s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  .modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* FORM */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+
+  .edit-roster-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .edit-roster-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+  }
+
+  .edit-roster-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 18px;
+  }
+
+  .edit-roster-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+  .edit-roster-input::placeholder { color: var(--muted); }
+
+  .edit-roster-remove {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 2px;
+    transition: color 0.15s;
+  }
+  .edit-roster-remove:hover { color: var(--danger); }
+
+  .ptbn-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 2px;
+    background: rgba(232,200,74,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(232,200,74,0.3);
+    white-space: nowrap;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-chip-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-chip-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* color palette for owners */
+  .c0 { background: #4ae8a0; }
+  .c1 { background: #e8c84a; }
+  .c2 { background: #4a9ee8; }
+  .c3 { background: #e84a8a; }
+  .c4 { background: #a04ae8; }
+  .c5 { background: #e8724a; }
+  .c6 { background: #4ae8d4; }
+  .c7 { background: #e84a4a; }
+  .c8 { background: #98e84a; }
+  .c9 { background: #e8b04a; }
+  .c10 { background: #4a6ee8; }
+  .c11 { background: #e84ac4; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+  }
+
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* ===== DRAFT ROOM ===== */
+  .draft-room { display: flex; gap: 0; height: 100%; overflow: hidden; }
+
+  .db-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+
+  .db-toolbar {
+    padding: 14px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .db-toolbar-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  .db-search {
+    flex: 1;
+    min-width: 160px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+  .db-search:focus { border-color: var(--accent); }
+  .db-search::placeholder { color: var(--muted); }
+
+  .db-filter {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    outline: none;
+    cursor: pointer;
+  }
+  .db-filter:focus { border-color: var(--accent); }
+
+  .db-upload-btn {
+    padding: 7px 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: var(--bg);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+  .db-upload-btn:hover { background: #d4b43a; }
+
+  .db-stats-row {
+    display: flex;
+    gap: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .db-stat-pill span { color: var(--accent2); font-weight: 600; }
+
+  .db-table-wrap { flex: 1; overflow-y: auto; }
+
+  table.prospect-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  table.prospect-table thead { position: sticky; top: 0; z-index: 10; }
+
+  table.prospect-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 9px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+  table.prospect-table th:hover { color: var(--accent); }
+  table.prospect-table th.sorted { color: var(--accent); }
+
+  table.prospect-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(42,47,61,0.5);
+    vertical-align: middle;
+  }
+
+  table.prospect-table tr:hover td { background: var(--surface2); cursor: pointer; }
+
+  table.prospect-table tr.drafted td {
+    opacity: 0.38;
+  }
+  table.prospect-table tr.drafted td .prospect-name { text-decoration: line-through; }
+
+  table.prospect-table tr.row-selected td {
+    background: rgba(232, 200, 74, 0.08) !important;
+    border-left: 2px solid var(--accent);
+  }
+  table.prospect-table tr.row-selected td:first-child { padding-left: 8px; }
+
+  /* Detail panel layout fix — keep draft button always in view */
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+  }
+  .detail-draft-section {
+    padding: 16px 20px 20px;
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+  }
+
+  .rank-cell {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    color: var(--accent);
+    width: 40px;
+    text-align: center;
+  }
+
+  .prospect-name { font-weight: 500; color: var(--text); }
+  .prospect-org { color: var(--muted); font-size: 11px; margin-top: 1px; }
+
+  .pos-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(74,158,232,0.15);
+    color: #4a9ee8;
+    border: 1px solid rgba(74,158,232,0.3);
+    white-space: nowrap;
+  }
+
+  .level-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .lvl-AAA { background: rgba(232,200,74,0.15); color: var(--accent); border: 1px solid rgba(232,200,74,0.3); }
+  .lvl-AA  { background: rgba(74,232,160,0.12); color: var(--accent2); border: 1px solid rgba(74,232,160,0.25); }
+  .lvl-Ap  { background: rgba(164,74,232,0.12); color: #a04ae8; border: 1px solid rgba(164,74,232,0.25); }
+  .lvl-A   { background: rgba(74,110,232,0.12); color: #4a6ee8; border: 1px solid rgba(74,110,232,0.25); }
+  .lvl-R   { background: rgba(100,100,100,0.12); color: var(--muted); border: 1px solid rgba(100,100,100,0.25); }
+
+  .drafted-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(232,74,74,0.1);
+    color: var(--danger);
+    border: 1px solid rgba(232,74,74,0.25);
+  }
+
+  .available-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(74,232,160,0.1);
+    color: var(--accent2);
+    border: 1px solid rgba(74,232,160,0.25);
+  }
+
+  /* PROSPECT DETAIL PANEL */
+  .detail-panel {
+    width: 320px;
+    min-width: 320px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .detail-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    gap: 10px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .detail-empty-icon { font-size: 40px; opacity: 0.3; }
+
+  .detail-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .detail-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+
+  .detail-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .detail-org { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+
+  .detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .detail-stats {
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-stat { }
+  .detail-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .detail-stat-val { font-size: 14px; font-weight: 500; }
+
+  .detail-notes {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-notes-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .detail-notes-text { font-size: 13px; line-height: 1.6; color: var(--text); }
+
+  .detail-draft-section { padding: 16px 20px; }
+  .detail-draft-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .detail-draft-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 10px;
+  }
+  .detail-draft-select:focus { border-color: var(--accent); }
+
+  .detail-drafted-by {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(232,74,74,0.08);
+    border: 1px solid rgba(232,74,74,0.2);
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .btn-draft {
+    width: 100%;
+    padding: 10px;
+    background: var(--accent2);
+    border: none;
+    border-radius: 7px;
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .btn-draft:hover { background: #38c882; }
+  .btn-undraft {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--danger);
+    border-radius: 7px;
+    color: var(--danger);
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-undraft:hover { background: rgba(232,74,74,0.1); }
+
+  .no-db-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 16px;
+    color: var(--muted);
+    text-align: center;
+    padding: 40px;
+  }
+  .no-db-icon { font-size: 52px; opacity: 0.25; }
+  .no-db-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--text); letter-spacing: 2px; }
+  .no-db-sub { font-size: 13px; max-width: 320px; line-height: 1.6; }
+  .no-db-template { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); margin-top: 6px; cursor: pointer; text-decoration: underline; }
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    ⚾ Farm Team League
+    <span class="logo-badge">2026</span>
+  </div>
+  <div class="header-actions">
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnAll" onclick="switchTab('all')">ALL TEAMS</button>
+      <button class="view-btn" id="btnDraft" onclick="switchTab('draft')">DRAFT PICKS</button>
+      <button class="view-btn" id="btnDB" onclick="switchTab('database')">⚾ DRAFT ROOM</button>
+    </div>
+    <button class="btn btn-primary" onclick="openAddPlayerModal()">+ Add Player</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-label">Owners</div>
+    <!-- populated by JS -->
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="mainContent">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- EDIT ROSTER MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="editModalTitle">Edit Roster</span>
+      <button class="modal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+    <div class="modal-body" id="editModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRoster()">Save Roster</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PLAYER MODAL -->
+<div class="modal-overlay" id="addPlayerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add / Move Player</span>
+      <button class="modal-close" onclick="closeModal('addPlayerModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Player Name</label>
+        <input class="form-input" id="newPlayerName" placeholder="e.g. Jackson Holliday" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Owner</label>
+        <select class="form-input" id="newPlayerOwner">
+          <!-- populated by JS -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Position on Roster (1 = top)</label>
+        <input class="form-input" type="number" id="newPlayerPos" value="1" min="1" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">PTBN Pick? (leave blank if real player)</label>
+        <input class="form-input" id="newPlayerPtbn" placeholder="e.g. PTBN 2028 or leave blank" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addPlayerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddPlayer()">Add to Roster</button>
+    </div>
+  </div>
+</div>
+
+<!-- TRADE MODAL -->
+<div class="modal-overlay" id="tradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Trade Builder</span>
+      <button class="modal-close" onclick="closeModal('tradeModal')">×</button>
+    </div>
+    <div class="modal-body" id="tradeModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('tradeModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="executeTrade()">Execute Trade</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const OWNER_COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7','c8','c9','c10','c11'];
+
+let leagueData = {
+  owners: [
+    {
+      id: 0, name: "John",
+      roster: [
+        "Brayden Taylor","Chase Hampton","Ryan Clifford","Travis Sykora","Seth Hernandez",
+        "","","","",
+      ],
+      ptbn: ["PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 1, name: "Mings",
+      roster: [
+        "Owen Murphy","Druw Jones","Gavin Cross","Chase Delauter","Noble Meyer",
+        "Edwin Arroyo","Hagen Smith","Bryce Rainer","Gage Wood","Steele Hall","Josh Hammond"
+      ],
+      ptbn: ["PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 2, name: "Nick",
+      roster: [
+        "Robby Snelling","Carson Williams","Jace Laviolette","Cam Canarella","Sal Stewart",
+        "","","","","",
+      ],
+      ptbn: ["PTBN 2028","PTBN 2026","PTBN 2030","PTBN 2028"]
+    },
+    {
+      id: 3, name: "Matthew",
+      roster: [
+        "Dylan Lesko","Cam Collier","Mason Black","Carlos Jorge","Slade Caldwell",
+        "Franklin Arias","Tyson Lewis","","","",
+      ],
+      ptbn: ["PTBN 2026","PTBN 2026","PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 4, name: "Braden",
+      roster: [
+        "Elian Pena","Spencer Jones","Noah Schultz","Arjun Nimmala","Mike Sirota",
+        "Jared Thomas","Jarlin Susana","Cole Carrigg","Seaver King","","",
+      ],
+      ptbn: ["PTBN 2030"]
+    },
+    {
+      id: 5, name: "James",
+      roster: [
+        "Vance Honeycutt","River Ryan","Yu-Min Lin","Jonah Tong","Quinn Mathews",
+        "Andrew Fischer","Wehiwa Aloy","Angel Genao","Shunpeita Yamashita","Carson Benge",""
+      ],
+      ptbn: []
+    },
+    {
+      id: 6, name: "Alex",
+      roster: [
+        "Nick Yorke","Samuel Basallo","Max Clark","Walker Jenkins","Ryan Waldschmidt",
+        "James Triantos","Owen Caissie","Jett Williams","George Lombard Jr.","Cris Rodriguez",
+        "Theo Gillen","Jojo Parker","Dorian Soto","Hector Rodriguez"
+      ],
+      ptbn: ["PTBN 2026","PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 7, name: "Daniel",
+      roster: [
+        "Daniel Espino","Charlie Condon","Zac Veen","Kahlil Watson","Harry Ford",
+        "Konnor Griffin","Enrique Bradfield","Tommy Troy","JJ Wetherholt","Jurrangelo Cijntje",
+        "Ethan Holiday","Cam Caminiti","Liam Doyle","Ike Irish","Eli Willits","Jamie Arnold"
+      ],
+      ptbn: ["PTBN 2026","PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 8, name: "Thomas",
+      roster: [
+        "Kevin Alcantara","Carson Whisenhunt","Anthony Solometo","Jaison Chourio","Josue De Paula",
+        "Thomas White","Bryce Eldridge","Jackson Ferris","Dakota Jordan","Kade Anderson",
+        "Jhostynxon Garcia","Hunter Barco","Braylon Payne"
+      ],
+      ptbn: ["PTBN 2026","PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 9, name: "Crews",
+      roster: [
+        "Pablo Guerrero","Vladi Miguel Guerrero","Eduardo Quintero","Michael Arroyo","Lazaro Montes",
+        "Robert Calaz","Brailer Guerrero","Josue Briceno","Ryan Sloan","Kevin Alvarez","AJ Ewing"
+      ],
+      ptbn: ["PTBN 2028","PTBN 2030","PTBN 2026 (Drew)","PTBN 2026 (John)","PTBN 2026 (Nick)","PTBN 2028","PTBN 2030"]
+    },
+    {
+      id: 10, name: "Drew",
+      roster: [
+        "Termarr Johnson","Brock Porter","Felnin Celesten","Ethan Salas","Paulino Santana",
+        "Jose Perdomo","Josuar De Jesus Gonzalez","","",""
+      ],
+      ptbn: ["PTBN 2026 (Braden)"]
+    },
+    {
+      id: 11, name: "Zac",
+      roster: [
+        "Sebastian Walcott","Leo De Vries","Travis Bazzana","Emmanuel Rodriguez","Braden Montgomery",
+        "Emil Morales","Justin Crawford","Yoeilin Cespedes","Joendry Vargas","Cooper Pratt",
+        "Tink Hence","Edward Florentino","Kash Mayfield","Juneiker Caceres","Ching-Hsien Ko",
+        "Wyatt Sanford","Devin Fitz-Gerald","Kendry Rojas","Payton Tolle"
+      ],
+      ptbn: ["PTBN 2026","PTBN 2028","PTBN 2026 (Braden)","PTBN 2026 (Crews)","PTBN 2026 (Thomas)","PTBN 2028","PTBN 2030"]
+    }
+  ]
+};
+
+// Save to localStorage
+function save() {
+  localStorage.setItem('farmTeagLeague2026', JSON.stringify(leagueData));
+}
+
+function load() {
+  const stored = localStorage.getItem('farmTeagLeague2026');
+  if (stored) {
+    try { leagueData = JSON.parse(stored); } catch(e) {}
+  }
+}
+load();
+
+// ===== STATE =====
+let currentTab = 'all';
+let selectedOwner = null;
+let editingOwnerId = null;
+let tradeState = { side1: { ownerId: null, items: [] }, side2: { ownerId: null, items: [] } };
+
+// ===== RENDER =====
+function render() {
+  renderSidebar();
+  renderContent();
+}
+
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = `<div class="sidebar-label">Owners</div>`;
+
+  leagueData.owners.forEach((owner, i) => {
+    const active = selectedOwner === owner.id ? ' active' : '';
+    const count = owner.roster.length;
+    const ptbnCount = owner.ptbn.length;
+    sb.innerHTML += `
+      <div class="owner-item${active}" onclick="selectOwner(${owner.id})">
+        <div class="owner-avatar ${OWNER_COLORS[i % 12]}">${owner.name[0]}</div>
+        <div class="owner-name">${owner.name}</div>
+        <span class="owner-count">${count}</span>
+      </div>`;
+  });
+
+  sb.innerHTML += `
+    <div class="sidebar-label" style="margin-top:12px">Actions</div>
+    <div class="owner-item" onclick="openTradeModal()" style="color:var(--accent2)">
+      <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;">⇄</div>
+      <div class="owner-name">Trade Builder</div>
+    </div>`;
+}
+
+function renderContent() {
+  const content = document.getElementById('mainContent');
+
+  if (selectedOwner !== null) {
+    renderSingleOwner(content);
+    return;
+  }
+
+  if (currentTab === 'all') {
+    renderAllTeams(content);
+  } else if (currentTab === 'draft') {
+    renderDraftPicks(content);
+  } else if (currentTab === 'database') {
+    renderDraftRoom(content);
+  }
+}
+
+function renderAllTeams(content) {
+  content.style.padding = '24px';
+  content.style.overflow = 'auto';
+  content.style.display = 'block';
+  // Stats
+  const totalPlayers = leagueData.owners.reduce((s,o) => s + o.roster.filter(p=>p).length, 0);
+  const totalPtbn = leagueData.owners.reduce((s,o) => s + o.ptbn.length, 0);
+
+  content.innerHTML = `
+    <div class="tab-bar">
+      <button class="tab-btn ${currentTab==='all'?'active':''}" onclick="switchTab('all')">All Teams</button>
+      <button class="tab-btn ${currentTab==='draft'?'active':''}" onclick="switchTab('draft')">Draft Picks</button>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-chip"><div class="stat-chip-val">${leagueData.owners.length}</div><div class="stat-chip-label">Owners</div></div>
+      <div class="stat-chip"><div class="stat-chip-val">${totalPlayers}</div><div class="stat-chip-label">Prospects</div></div>
+      <div class="stat-chip"><div class="stat-chip-val">${totalPtbn}</div><div class="stat-chip-label">PTBN Picks</div></div>
+    </div>
+    <div class="grid-view" id="teamsGrid"></div>`;
+
+  const grid = document.getElementById('teamsGrid');
+  leagueData.owners.forEach((owner, i) => {
+    const card = document.createElement('div');
+    card.className = 'team-card';
+
+    let rosterHtml = '';
+    owner.roster.slice(0, 12).forEach((p, j) => {
+      if (!p) {
+        rosterHtml += `
+          <div class="roster-item">
+            <span class="roster-rank">${j+1}</span>
+            <span class="roster-name" style="color:var(--muted);font-style:italic">— Empty —</span>
+          </div>`;
+      } else {
+        rosterHtml += `
+          <div class="roster-item">
+            <span class="roster-rank">${j+1}</span>
+            <span class="roster-name">${p}</span>
+            <span class="roster-tag tag-player">P</span>
+          </div>`;
+      }
+    });
+    const filledCount = owner.roster.filter(p=>p).length;
+    owner.ptbn.slice(0, 3).forEach((p) => {
+      rosterHtml += `
+        <div class="roster-item">
+          <span class="roster-rank">—</span>
+          <span class="roster-name" style="color:var(--muted)">${p}</span>
+          <span class="roster-tag tag-ptbn">PTBN</span>
+        </div>`;
+    });
+    if (owner.roster.length > 12) {
+      const remaining = owner.roster.slice(12).filter(p=>p).length;
+      const remainingEmpty = owner.roster.slice(12).filter(p=>!p).length;
+      let label = remaining > 0 ? `+${remaining} more players` : '';
+      if (remainingEmpty > 0) label += (label ? `, ${remainingEmpty} empty slots` : `${remainingEmpty} empty slots`);
+      rosterHtml += `<div class="roster-item"><span class="roster-rank">…</span><span class="roster-name" style="color:var(--muted)">${label}</span></div>`;
+    }
+
+    card.innerHTML = `
+      <div class="team-card-header">
+        <div class="team-card-avatar ${OWNER_COLORS[i % 12]}">${owner.name[0]}</div>
+        <div class="team-card-info">
+          <div class="team-card-owner">${owner.name}'s Farm Team</div>
+          <div class="team-card-meta">${filledCount} prospects · ${owner.roster.length} slots · ${owner.ptbn.length} picks</div>
+        </div>
+        <button class="team-card-edit" onclick="openEditModal(${owner.id}); event.stopPropagation();">Edit</button>
+      </div>
+      <div class="team-card-roster">${rosterHtml}</div>`;
+
+    card.addEventListener('click', () => selectOwner(owner.id));
+    grid.appendChild(card);
+  });
+}
+
+function renderDraftPicks(content) {
+  content.style.padding = '24px';
+  content.style.overflow = 'auto';
+  content.style.display = 'block';
+  content.innerHTML = `
+    <div class="tab-bar">
+      <button class="tab-btn ${currentTab==='all'?'active':''}" onclick="switchTab('all')">All Teams</button>
+      <button class="tab-btn ${currentTab==='draft'?'active':''}" onclick="switchTab('draft')">Draft Picks</button>
+    </div>
+    <div style="margin-bottom:16px;color:var(--muted);font-size:13px;font-family:'DM Mono',monospace;">PTBN = Player To Be Named — future draft compensation picks</div>
+    <div class="draft-view" id="draftGrid"></div>`;
+
+  const grid = document.getElementById('draftGrid');
+  leagueData.owners.forEach((owner, i) => {
+    const col = document.createElement('div');
+    col.className = 'draft-column';
+
+    let picksHtml = '';
+    if (owner.ptbn.length === 0) {
+      picksHtml = `<div class="draft-pick" style="color:var(--muted)">No PTBN picks</div>`;
+    } else {
+      owner.ptbn.forEach(p => {
+        const yearMatch = p.match(/\d{4}/);
+        const year = yearMatch ? yearMatch[0] : '—';
+        const from = p.includes('(') ? p.match(/\(([^)]+)\)/)?.[1] : null;
+        picksHtml += `
+          <div class="draft-pick">
+            <span class="pick-year">${year}</span>
+            ${from ? `<span class="pick-from">from ${from}</span>` : '<span class="pick-from">own pick</span>'}
+          </div>`;
+      });
+    }
+
+    col.innerHTML = `
+      <div class="draft-col-header">
+        <div class="draft-col-avatar ${OWNER_COLORS[i % 12]}">${owner.name[0]}</div>
+        <span class="draft-col-name">${owner.name}</span>
+      </div>
+      <div class="draft-pick-list">${picksHtml}</div>`;
+
+    grid.appendChild(col);
+  });
+}
+
+function renderSingleOwner(content) {
+  content.style.padding = '24px';
+  content.style.overflow = 'auto';
+  content.style.display = 'block';
+  const owner = leagueData.owners.find(o => o.id === selectedOwner);
+  if (!owner) return;
+  const i = leagueData.owners.indexOf(owner);
+
+  let rosterHtml = '';
+  owner.roster.forEach((p, j) => {
+    if (!p) {
+      rosterHtml += `
+        <div class="roster-full-item">
+          <div class="roster-full-rank">${j+1}</div>
+          <div class="roster-full-name" style="color:var(--muted);font-style:italic">— Empty —</div>
+        </div>`;
+    } else {
+      rosterHtml += `
+        <div class="roster-full-item">
+          <div class="roster-full-rank">${j+1}</div>
+          <div class="roster-full-name">${p}</div>
+          <span class="roster-tag tag-player" style="font-size:10px">PROSPECT</span>
+        </div>`;
+    }
+  });
+  const filledCount = owner.roster.filter(p=>p).length;
+  const emptyCount = owner.roster.filter(p=>!p).length;
+
+  let ptbnHtml = '';
+  if (owner.ptbn.length === 0) {
+    ptbnHtml = `<div style="padding:16px 20px;color:var(--muted);font-size:13px">No PTBN picks</div>`;
+  } else {
+    owner.ptbn.forEach(p => {
+      ptbnHtml += `
+        <div class="roster-full-item">
+          <div class="roster-full-rank">—</div>
+          <div class="roster-full-name">${p}</div>
+          <span class="ptbn-badge">PTBN</span>
+        </div>`;
+    });
+  }
+
+  content.innerHTML = `
+    <button class="btn" onclick="selectOwner(null)" style="margin-bottom:18px;">← Back</button>
+    <div class="single-view">
+      <div class="team-header-full">
+        <div class="team-header-avatar-lg ${OWNER_COLORS[i % 12]}">${owner.name[0]}</div>
+        <div>
+          <div class="team-title">${owner.name}'s Farm Team</div>
+          <div class="team-subtitle">${filledCount} prospects · ${emptyCount > 0 ? emptyCount + ' empty slots · ' : ''}${owner.ptbn.length} PTBN picks</div>
+        </div>
+        <button class="btn btn-primary" style="margin-left:auto" onclick="openEditModal(${owner.id})">Edit Roster</button>
+      </div>
+
+      <div class="roster-section" style="margin-bottom:18px">
+        <div class="section-title">
+          <span>Prospects</span>
+          <span>${filledCount} players${emptyCount > 0 ? ` · ${emptyCount} empty` : ''}</span>
+        </div>
+        ${rosterHtml}
+      </div>
+
+      <div class="roster-section">
+        <div class="section-title">
+          <span>PTBN Picks</span>
+          <span>${owner.ptbn.length} picks</span>
+        </div>
+        ${ptbnHtml}
+      </div>
+    </div>`;
+}
+
+// ===== ACTIONS =====
+function switchTab(tab) {
+  currentTab = tab;
+  selectedOwner = null;
+  // Reset any styles applied by draft room
+  const content = document.getElementById('mainContent');
+  content.style.padding = '';
+  content.style.overflow = '';
+  content.style.display = '';
+  document.getElementById('btnAll').classList.toggle('active', tab === 'all');
+  document.getElementById('btnDraft').classList.toggle('active', tab === 'draft');
+  document.getElementById('btnDB').classList.toggle('active', tab === 'database');
+  render();
+}
+
+function selectOwner(id) {
+  selectedOwner = id;
+  document.querySelectorAll('.owner-item').forEach(el => el.classList.remove('active'));
+  if (id !== null) {
+    const idx = leagueData.owners.findIndex(o => o.id === id);
+    const items = document.querySelectorAll('.owner-item');
+    if (items[idx]) items[idx].classList.add('active');
+  }
+  render();
+}
+
+// ===== EDIT MODAL =====
+function openEditModal(ownerId) {
+  editingOwnerId = ownerId;
+  const owner = leagueData.owners.find(o => o.id === ownerId);
+  const i = leagueData.owners.indexOf(owner);
+
+  document.getElementById('editModalTitle').textContent = `Edit – ${owner.name}'s Roster`;
+
+  let html = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:1px">PROSPECTS</div>`;
+  html += `<div class="edit-roster-list" id="editRosterList">`;
+  owner.roster.forEach((p, j) => {
+    html += `
+      <div class="edit-roster-item">
+        <span class="edit-roster-num">${j+1}</span>
+        <input class="edit-roster-input" value="${p}" data-type="player" data-idx="${j}" />
+        <button class="edit-roster-remove" onclick="removeRosterItem('player', ${j})">×</button>
+      </div>`;
+  });
+  html += `</div>`;
+  html += `<button class="btn" style="margin-top:10px;width:100%;font-size:12px" onclick="addRosterItem('player')">+ Add Prospect</button>`;
+
+  html += `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin:20px 0 12px;letter-spacing:1px">PTBN PICKS</div>`;
+  html += `<div class="edit-roster-list" id="editPtbnList">`;
+  owner.ptbn.forEach((p, j) => {
+    html += `
+      <div class="edit-roster-item">
+        <span class="edit-roster-num">—</span>
+        <input class="edit-roster-input" value="${p}" data-type="ptbn" data-idx="${j}" />
+        <button class="edit-roster-remove" onclick="removeRosterItem('ptbn', ${j})">×</button>
+      </div>`;
+  });
+  html += `</div>`;
+  html += `<button class="btn" style="margin-top:10px;width:100%;font-size:12px" onclick="addRosterItem('ptbn')">+ Add PTBN Pick</button>`;
+
+  document.getElementById('editModalBody').innerHTML = html;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function addRosterItem(type) {
+  const owner = leagueData.owners.find(o => o.id === editingOwnerId);
+  if (type === 'player') {
+    owner.roster.push('');
+  } else {
+    owner.ptbn.push('PTBN 2026');
+  }
+  openEditModal(editingOwnerId);
+}
+
+function removeRosterItem(type, idx) {
+  const owner = leagueData.owners.find(o => o.id === editingOwnerId);
+  if (type === 'player') {
+    owner.roster.splice(idx, 1);
+  } else {
+    owner.ptbn.splice(idx, 1);
+  }
+  openEditModal(editingOwnerId);
+}
+
+function saveRoster() {
+  const owner = leagueData.owners.find(o => o.id === editingOwnerId);
+  const playerInputs = document.querySelectorAll('[data-type="player"]');
+  const ptbnInputs = document.querySelectorAll('[data-type="ptbn"]');
+
+  owner.roster = Array.from(playerInputs).map(i => i.value.trim()).filter(v => v);
+  owner.ptbn = Array.from(ptbnInputs).map(i => i.value.trim()).filter(v => v);
+
+  save();
+  closeModal('editModal');
+  render();
+}
+
+// ===== ADD PLAYER =====
+function openAddPlayerModal() {
+  const sel = document.getElementById('newPlayerOwner');
+  sel.innerHTML = leagueData.owners.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+  document.getElementById('newPlayerName').value = '';
+  document.getElementById('newPlayerPtbn').value = '';
+  document.getElementById('newPlayerPos').value = '1';
+  document.getElementById('addPlayerModal').classList.add('open');
+}
+
+function confirmAddPlayer() {
+  const name = document.getElementById('newPlayerName').value.trim();
+  const ownerId = parseInt(document.getElementById('newPlayerOwner').value);
+  const pos = parseInt(document.getElementById('newPlayerPos').value) - 1;
+  const ptbn = document.getElementById('newPlayerPtbn').value.trim();
+
+  if (!name && !ptbn) { alert('Enter a player name or PTBN designation.'); return; }
+
+  const owner = leagueData.owners.find(o => o.id === ownerId);
+  if (ptbn) {
+    owner.ptbn.splice(Math.max(0, pos), 0, ptbn);
+  } else {
+    owner.roster.splice(Math.max(0, pos), 0, name);
+  }
+
+  save();
+  closeModal('addPlayerModal');
+  render();
+}
+
+// ===== TRADE MODAL =====
+function openTradeModal() {
+  tradeState = {
+    side1: { ownerId: leagueData.owners[0].id, items: [] },
+    side2: { ownerId: leagueData.owners[1].id, items: [] }
+  };
+  renderTradeModal();
+  document.getElementById('tradeModal').classList.add('open');
+}
+
+function renderTradeModal() {
+  const body = document.getElementById('tradeModalBody');
+  const ownerOptions = leagueData.owners.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+
+  const buildSide = (side, label) => {
+    const s = tradeState[side];
+    const owner = leagueData.owners.find(o => o.id === s.ownerId);
+    const allItems = [...owner.roster.map((p,i) => ({type:'player',label:p,idx:i})), ...owner.ptbn.map((p,i) => ({type:'ptbn',label:p,idx:i}))];
+    const selected = s.items.map(it => `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 10px;font-size:12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">${it.label}<button onclick="removeTradeSideItem('${side}','${it.label}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">×</button></div>`).join('');
+    const options = allItems.filter(it => !s.items.find(si => si.label === it.label)).map(it => `<option value="${it.type}|||${it.idx}|||${it.label}">${it.label}${it.type==='ptbn'?' [PTBN]':''}</option>`).join('');
+    return `
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px">${label}</div>
+        <select class="form-input" onchange="changeTradeSideOwner('${side}',this.value)">${leagueData.owners.map(o=>`<option value="${o.id}" ${o.id===s.ownerId?'selected':''}>${o.name}</option>`).join('')}</select>
+        <div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px">SENDING:</div>
+        ${selected || '<div style="color:var(--muted);font-size:12px;padding:4px 0">Nothing selected</div>'}
+        <select class="form-input" style="margin-top:8px;font-size:12px" onchange="addTradeSideItem('${side}',this)">
+          <option value="">+ Pick item to include…</option>
+          ${options}
+        </select>
+      </div>`;
+  };
+
+  body.innerHTML = `
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      ${buildSide('side1','SIDE A')}
+      <div style="display:flex;align-items:center;padding-top:30px;font-size:22px;color:var(--accent);flex-shrink:0">⇄</div>
+      ${buildSide('side2','SIDE B')}
+    </div>`;
+}
+
+function changeTradeSideOwner(side, ownerId) {
+  tradeState[side].ownerId = parseInt(ownerId);
+  tradeState[side].items = [];
+  renderTradeModal();
+}
+
+function addTradeSideItem(side, sel) {
+  const val = sel.value;
+  if (!val) return;
+  const [type, idx, label] = val.split('|||');
+  tradeState[side].items.push({ type, idx: parseInt(idx), label });
+  renderTradeModal();
+}
+
+function removeTradeSideItem(side, label) {
+  tradeState[side].items = tradeState[side].items.filter(it => it.label !== label);
+  renderTradeModal();
+}
+
+function executeTrade() {
+  const s1 = tradeState.side1;
+  const s2 = tradeState.side2;
+  if (s1.ownerId === s2.ownerId) { alert('Select two different owners.'); return; }
+  if (s1.items.length === 0 && s2.items.length === 0) { alert('Add items to the trade.'); return; }
+
+  const owner1 = leagueData.owners.find(o => o.id === s1.ownerId);
+  const owner2 = leagueData.owners.find(o => o.id === s2.ownerId);
+
+  // Move s1 items to owner2
+  s1.items.forEach(it => {
+    if (it.type === 'player') {
+      owner1.roster = owner1.roster.filter(p => p !== it.label);
+      owner2.roster.push(it.label);
+    } else {
+      owner1.ptbn = owner1.ptbn.filter(p => p !== it.label);
+      owner2.ptbn.push(it.label);
+    }
+  });
+
+  // Move s2 items to owner1
+  s2.items.forEach(it => {
+    if (it.type === 'player') {
+      owner2.roster = owner2.roster.filter(p => p !== it.label);
+      owner1.roster.push(it.label);
+    } else {
+      owner2.ptbn = owner2.ptbn.filter(p => p !== it.label);
+      owner1.ptbn.push(it.label);
+    }
+  });
+
+  save();
+  closeModal('tradeModal');
+  render();
+  alert(`✅ Trade completed between ${owner1.name} and ${owner2.name}!`);
+}
+
+// ===== UTILS =====
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+
+// ===== PROSPECT DATABASE =====
+let prospectDB = [{"Rank": 1, "Name": "A.J. Vukovich", "Position": "OF", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 2, "Name": "Daniel Eagen", "Position": "P", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 3, "Name": "David Hagaman", "Position": "P", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 4, "Name": "Demetrio Crisantes", "Position": "2B/3B", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 5, "Name": "Druw Jones", "Position": "OF", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 6, "Name": "Gavin Conticello", "Position": "OF", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 7, "Name": "Jansel Luis", "Position": "2B/3B/SS", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 8, "Name": "JD Dix", "Position": "2B", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 9, "Name": "Jordan Lawlar", "Position": "2B/3B/SS", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 10, "Name": "Kayson Cunningham", "Position": "SS", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 11, "Name": "Kohl Drake", "Position": "P", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 12, "Name": "LuJames Groover", "Position": "3B", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 13, "Name": "Mitch Bratt", "Position": "P", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 14, "Name": "Patrick Forbes", "Position": "P", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 15, "Name": "Ryan Waldschmidt", "Position": "OF", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 16, "Name": "Slade Caldwell", "Position": "OF", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 17, "Name": "Tommy Troy", "Position": "2B", "MLB Org": "ARI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 18, "Name": "Braden Nett", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 19, "Name": "Colby Thomas", "Position": "OF", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 20, "Name": "Daniel Susac", "Position": "C", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 21, "Name": "Devin Taylor", "Position": "OF", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 22, "Name": "Edgar Montero", "Position": "SS", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 23, "Name": "Gage Jump", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 24, "Name": "Gavin Turley", "Position": "OF", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 25, "Name": "Gunnar Hoglund", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 26, "Name": "Henry Bolte", "Position": "OF", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 27, "Name": "Jack Perkins", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 28, "Name": "Jamie Arnold", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 29, "Name": "Johenssy Colome", "Position": "SS", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 30, "Name": "Joshua Kuroda-Grauer", "Position": "SS", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 31, "Name": "Leo De Vries", "Position": "SS", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 32, "Name": "Luis Morales", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 33, "Name": "Shotaro Morii", "Position": "SS", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 34, "Name": "Tommy White", "Position": "3B", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 35, "Name": "Wei-En Lin", "Position": "P", "MLB Org": "ATH", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 36, "Name": "Alex Lodise", "Position": "SS", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 37, "Name": "Briggs McKenzie", "Position": "P", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 38, "Name": "Cam Caminiti", "Position": "P", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 39, "Name": "Didier Fuentes", "Position": "P", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 40, "Name": "Diego Tornes", "Position": "OF", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 41, "Name": "J.R. Ritchie", "Position": "P", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 42, "Name": "John Gil", "Position": "3B/SS", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 43, "Name": "Jose Manon", "Position": "SS", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 44, "Name": "Luke Sinnard", "Position": "P", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 45, "Name": "Owen Murphy", "Position": "P", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 46, "Name": "Starling De La Cruz", "Position": "OF", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 47, "Name": "Tate Southisene", "Position": "SS", "MLB Org": "ATL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 48, "Name": "Ariel Roque", "Position": "OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 49, "Name": "Aron Estrada", "Position": "2B/OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 50, "Name": "Boston Bateman", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 51, "Name": "Braxton Bragg", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 52, "Name": "Cobb Hightower", "Position": "SS", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 53, "Name": "Creed Willems", "Position": "C/1B", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 54, "Name": "Dylan Beavers", "Position": "OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 55, "Name": "Enrique Bradfield Jr.", "Position": "OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 56, "Name": "Esteban Mejia", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 57, "Name": "Ike Irish", "Position": "OF/C/1B", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 58, "Name": "Jordan Sanchez", "Position": "OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 59, "Name": "Jose Luis Acevedo", "Position": "SS", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 60, "Name": "Joseph Dzierwa", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 61, "Name": "Juaron Watts-Brown", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 62, "Name": "Levi Wells", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 63, "Name": "Luis De Leon", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 64, "Name": "Nate George", "Position": "OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 65, "Name": "Nestor German", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 66, "Name": "Pedro Gomez", "Position": "OF", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 67, "Name": "Samuel Basallo", "Position": "C", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 68, "Name": "Trey Gibson", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 69, "Name": "Tyson Neighbors", "Position": "P", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 70, "Name": "Victor Figueroa", "Position": "1B", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 71, "Name": "Wehiwa Aloy", "Position": "SS", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 72, "Name": "Wilfri De La Cruz", "Position": "SS", "MLB Org": "BAL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 73, "Name": "Anthony Eyanson", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 74, "Name": "Connelly Early", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 75, "Name": "Dawvris Brito", "Position": "SS", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 76, "Name": "Dorian Soto", "Position": "SS", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 77, "Name": "Enddy Azocar", "Position": "OF", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 78, "Name": "Franklin Arias", "Position": "SS", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 79, "Name": "Freili Encarnacion", "Position": "1B/3B", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 80, "Name": "Garielvin Silverio", "Position": "OF", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 81, "Name": "Henry Godbout", "Position": "2B", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 82, "Name": "Jake Bennett", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 83, "Name": "Josue Brito", "Position": "OF/1B", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 84, "Name": "Juan Valera", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 85, "Name": "Justin Gonzales", "Position": "OF", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 86, "Name": "Kyson Witherspoon", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 87, "Name": "Marcelo Mayer", "Position": "2B/3B/SS", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 88, "Name": "Marcus Phillips", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 89, "Name": "Miguel Bleis", "Position": "OF", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 90, "Name": "Mikey Romero", "Position": "2B/3B/SS", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 91, "Name": "Payton Tolle", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 92, "Name": "Yoeilin Cespedes", "Position": "2B/SS", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 93, "Name": "Yordanny Monegro", "Position": "P", "MLB Org": "BOS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 94, "Name": "Cole Mathis", "Position": "1B", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 95, "Name": "Ethan Conrad", "Position": "OF", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 96, "Name": "James Triantos", "Position": "2B", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 97, "Name": "Jaxon Wiggins", "Position": "P", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 98, "Name": "Jefferson Rojas", "Position": "2B/SS", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 99, "Name": "Jonathon Long", "Position": "1B", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 100, "Name": "Josiah Hartshorn", "Position": "OF", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 101, "Name": "Kane Kepley", "Position": "OF", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 102, "Name": "Kevin Alcantara", "Position": "OF", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 103, "Name": "Moises Ballesteros", "Position": "C", "MLB Org": "CHC", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 104, "Name": "Billy Carlson", "Position": "SS", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 105, "Name": "Braden Montgomery", "Position": "OF", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 106, "Name": "Caleb Bonemer", "Position": "3B/SS", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 107, "Name": "Christian Oppor", "Position": "P", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 108, "Name": "Drew Thorpe", "Position": "P", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 109, "Name": "Hagen Smith", "Position": "P", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 110, "Name": "Jaden Fauske", "Position": "C/OF", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 111, "Name": "Javier Mogollon", "Position": "SS", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 112, "Name": "Jeral Perez", "Position": "2B", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 113, "Name": "Noah Schultz", "Position": "P", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 114, "Name": "Sam Antonacci", "Position": "2B/3B", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 115, "Name": "Tanner McDougal", "Position": "P", "MLB Org": "CHW", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 116, "Name": "Adolfo Sanchez", "Position": "OF", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 117, "Name": "Alfredo Duno", "Position": "C", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 118, "Name": "Angel Nunez", "Position": "OF", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 119, "Name": "Arnaldo Lantigua", "Position": "OF", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 120, "Name": "Cam Collier", "Position": "1B/3B", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 121, "Name": "Chase Burns", "Position": "P", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 122, "Name": "Chase Petty", "Position": "P", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 123, "Name": "Edwin Arroyo", "Position": "SS", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 124, "Name": "Hector Rodriguez", "Position": "OF", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 125, "Name": "Mason Neville", "Position": "OF", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 126, "Name": "Rhett Lowder", "Position": "P", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 127, "Name": "Sal Stewart", "Position": "1B/3B", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 128, "Name": "Sheng-En Lin", "Position": "P", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 129, "Name": "Steele Hall", "Position": "SS", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 130, "Name": "Stharlin Torres", "Position": "P", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 131, "Name": "Tyson Lewis", "Position": "SS", "MLB Org": "CIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 132, "Name": "Alfonsin Rosario", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 133, "Name": "Angel Genao", "Position": "SS", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 134, "Name": "Braylon Doughty", "Position": "P", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 135, "Name": "C.J. Kayfus", "Position": "OF/1B", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 136, "Name": "Chase DeLauter", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 137, "Name": "Cooper Ingle", "Position": "C", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 138, "Name": "Daniel Espino", "Position": "P", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 139, "Name": "Dauri Fernandez", "Position": "2B/3B/SS", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 140, "Name": "Dean Curley", "Position": "SS", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 141, "Name": "Jace LaViolette", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 142, "Name": "Jaison Chourio", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 143, "Name": "Joey Oakie", "Position": "P", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 144, "Name": "Johnathan Rodriguez", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 145, "Name": "Juan Brito", "Position": "2B/3B/OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 146, "Name": "Juneiker Caceres", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 147, "Name": "Khal Stephen", "Position": "P", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 148, "Name": "Nolan Schubart", "Position": "1B/OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 149, "Name": "Parker Messick", "Position": "P", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 150, "Name": "Ralphy Velazquez", "Position": "1B", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 151, "Name": "Robert Arias", "Position": "OF", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 152, "Name": "Travis Bazzana", "Position": "2B", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 153, "Name": "Welbyn Francisca", "Position": "SS", "MLB Org": "CLE", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 154, "Name": "Charlie Condon", "Position": "1B", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 155, "Name": "Cole Carrigg", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 156, "Name": "Cristian Arguelles", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 157, "Name": "Ethan Holliday", "Position": "SS", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 158, "Name": "Griffin Herring", "Position": "P", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 159, "Name": "Jared Thomas", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 160, "Name": "Max Belyeu", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 161, "Name": "Robert Calaz", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 162, "Name": "Roc Riggio", "Position": "2B", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 163, "Name": "Roldy Brito", "Position": "2B/OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 164, "Name": "Sterlin Thompson", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 165, "Name": "Zac Veen", "Position": "OF", "MLB Org": "COL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 166, "Name": "Bryce Rainer", "Position": "SS", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 167, "Name": "Cris Rodriguez", "Position": "OF", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 168, "Name": "Franyerber Montilla", "Position": "2B/SS", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 169, "Name": "Hao-Yu Lee", "Position": "2B/3B", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 170, "Name": "Izaac Pacheco", "Position": "3B", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 171, "Name": "Jordan Yost", "Position": "SS", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 172, "Name": "Josue Briceno", "Position": "C/1B", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 173, "Name": "Kelvis Salcedo", "Position": "P", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 174, "Name": "Kevin McGonigle", "Position": "SS", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 175, "Name": "Max Anderson", "Position": "2B/3B", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 176, "Name": "Max Clark", "Position": "OF", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 177, "Name": "Randy Santana", "Position": "OF", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 178, "Name": "Thayron Liranzo", "Position": "C", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 179, "Name": "Troy Melton", "Position": "P", "MLB Org": "DET", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 180, "Name": "A.J. Blubaugh", "Position": "P", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 181, "Name": "Albert Fermin", "Position": "SS", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 182, "Name": "Brice Matthews", "Position": "2B", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 183, "Name": "Ethan Frey", "Position": "OF", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 184, "Name": "Ethan Pecko", "Position": "P", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 185, "Name": "Joseph Sullivan", "Position": "OF", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 186, "Name": "Kevin Alvarez", "Position": "OF", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 187, "Name": "Luis Baez", "Position": "OF", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 188, "Name": "Miguel Ullola", "Position": "P", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 189, "Name": "Shay Whitcomb", "Position": "2B/3B", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 190, "Name": "Will Watson", "Position": "P", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 191, "Name": "Xavier Neyens", "Position": "SS/3B", "MLB Org": "HOU", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 192, "Name": "Angeibel Gomez", "Position": "OF", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 193, "Name": "Blake Mitchell", "Position": "C", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 194, "Name": "Callan Moss", "Position": "1B", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 195, "Name": "Carson Roccaforte", "Position": "OF", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 196, "Name": "Carter Jensen", "Position": "C", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 197, "Name": "David Shields", "Position": "P", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 198, "Name": "Jaider Suarez", "Position": "SS", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 199, "Name": "Josh Hammond", "Position": "SS/P", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 200, "Name": "Kendry Chourio", "Position": "P", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 201, "Name": "Ramon Ramirez", "Position": "C", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 202, "Name": "Sean Gamble", "Position": "2B", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 203, "Name": "Yandel Ricardo", "Position": "SS", "MLB Org": "KCR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 204, "Name": "Caden Dana", "Position": "P", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 205, "Name": "Gabriel Davalillo", "Position": "C", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 206, "Name": "George Klassen", "Position": "P", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 207, "Name": "Hayden Alvarez", "Position": "OF", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 208, "Name": "Johnny Slawinski", "Position": "P", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 209, "Name": "Joswa Lugo", "Position": "SS", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 210, "Name": "Nelson Rada", "Position": "OF", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 211, "Name": "Raudi Rodriguez", "Position": "OF", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 212, "Name": "Ryan Johnson", "Position": "P", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 213, "Name": "Tyler Bremner", "Position": "P", "MLB Org": "LAA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 214, "Name": "Adam Serwinowski", "Position": "P", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 215, "Name": "Alex Freeland", "Position": "2B/3B/SS", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 216, "Name": "Brendan Tunink", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 217, "Name": "Charles Davalan", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 218, "Name": "Chase Harlan", "Position": "3B", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 219, "Name": "Ching-Hsien Ko", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 220, "Name": "Christian Zazueta", "Position": "P", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 221, "Name": "Eduardo Quintero", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 222, "Name": "Emil Morales", "Position": "SS", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 223, "Name": "Jackson Ferris", "Position": "P", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 224, "Name": "James Tibbs", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 225, "Name": "Joendry Vargas", "Position": "SS", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 226, "Name": "Josue De Paula", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 227, "Name": "Kellon Lindsey", "Position": "SS/OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 228, "Name": "Kendall George", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 229, "Name": "Mike Sirota", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 230, "Name": "Reyli Mariano", "Position": "2B/SS", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 231, "Name": "River Ryan", "Position": "P", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 232, "Name": "Ryan Ward", "Position": "1B/OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 233, "Name": "Zach Root", "Position": "P", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 234, "Name": "Zyhir Hope", "Position": "OF", "MLB Org": "LAD", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 235, "Name": "Aiva Arquette", "Position": "SS", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 236, "Name": "Andrew Salas", "Position": "SS", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 237, "Name": "Brandon Compton", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 238, "Name": "Cam Cannarella", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 239, "Name": "Deyvison De Los Santos", "Position": "3B/1B", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 240, "Name": "Dillon Head", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 241, "Name": "Dillon Lewis", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 242, "Name": "Fenwick Trimble", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 243, "Name": "Joe Mack", "Position": "C", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 244, "Name": "Karson Milbrandt", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 245, "Name": "Kemp Alderman", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 246, "Name": "Kevin Defrank", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 247, "Name": "Liomar Martinez", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 248, "Name": "Luis Cova", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 249, "Name": "Nate Payne", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 250, "Name": "Noble Meyer", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 251, "Name": "Owen Caissie", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 252, "Name": "PJ Morlando", "Position": "OF", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 253, "Name": "Robby Snelling", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 254, "Name": "Santiago Solarte", "Position": "SS", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 255, "Name": "Starlyn Caba", "Position": "SS", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 256, "Name": "Thomas White", "Position": "P", "MLB Org": "MIA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 257, "Name": "Andrew Fischer", "Position": "1B/3B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 258, "Name": "Blake Burke", "Position": "1B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 259, "Name": "Brailyn Antunez", "Position": "OF", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 260, "Name": "Brandon Sproat", "Position": "P", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 261, "Name": "Braylon Payne", "Position": "OF", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 262, "Name": "Brock Wilken", "Position": "3B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 263, "Name": "Bryce Meccage", "Position": "P", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 264, "Name": "Cooper Pratt", "Position": "SS", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 265, "Name": "Diego Frontado", "Position": "SS", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 266, "Name": "Eric Bitonti", "Position": "1B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 267, "Name": "Ethan Dorchies", "Position": "P", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 268, "Name": "Jadher Areinamo", "Position": "2B/3B/SS", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 269, "Name": "Jeferson Quero", "Position": "C", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 270, "Name": "Jesus Made", "Position": "SS", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 271, "Name": "Jett Williams", "Position": "2B/SS/OF", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 272, "Name": "Jonathan Rangel", "Position": "C/1B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 273, "Name": "Jose Anderson", "Position": "OF", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 274, "Name": "Josh Adamczewski", "Position": "2B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 275, "Name": "Juan Martinez", "Position": "2B/3B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 276, "Name": "Logan Henderson", "Position": "P", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 277, "Name": "Luis Lara", "Position": "OF", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 278, "Name": "Luis Pena", "Position": "2B/SS", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 279, "Name": "Luke Adams", "Position": "1B/3B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 280, "Name": "Marco Dinges", "Position": "C", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 281, "Name": "Mike Boeve", "Position": "1B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 282, "Name": "Ricky Moneys", "Position": "SS", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 283, "Name": "Tyler Black", "Position": "1B", "MLB Org": "MIL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 284, "Name": "Billy Amick", "Position": "1B/3B", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 285, "Name": "Brandon Winokur", "Position": "SS/OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 286, "Name": "Charlee Soto", "Position": "P", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 287, "Name": "Connor Prielipp", "Position": "P", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 288, "Name": "Dasan Hill", "Position": "P", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 289, "Name": "Eduardo Beltre", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 290, "Name": "Eduardo Tait", "Position": "C", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 291, "Name": "Emmanuel Rodriguez", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 292, "Name": "Enmanuel Merlo", "Position": "SS", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 293, "Name": "Gabriel Gonzalez", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 294, "Name": "Hendry Mendez", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 295, "Name": "Kaelen Culpepper", "Position": "SS", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 296, "Name": "Kala'i Rosario", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 297, "Name": "Kendry Rojas", "Position": "P", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 298, "Name": "Kyle DeBarge", "Position": "SS", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 299, "Name": "Marek Houston", "Position": "SS", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 300, "Name": "Mick Abel", "Position": "P", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 301, "Name": "Payton Eeles", "Position": "2B", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 302, "Name": "Quentin Young", "Position": "SS/3B", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 303, "Name": "Riley Quick", "Position": "P", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 304, "Name": "Walker Jenkins", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 305, "Name": "Yasser Mercedes", "Position": "OF", "MLB Org": "MIN", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 306, "Name": "A.J. Ewing", "Position": "OF", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 307, "Name": "Carson Benge", "Position": "OF", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 308, "Name": "Chris Suero", "Position": "C/1B/OF", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 309, "Name": "Christian Scott", "Position": "P", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 310, "Name": "Cleiner Ramirez", "Position": "OF", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 311, "Name": "Elian Pena", "Position": "SS", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 312, "Name": "Jack Wenninger", "Position": "P", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 313, "Name": "Jacob Reimer", "Position": "3B/1B", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 314, "Name": "Jonah Tong", "Position": "P", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 315, "Name": "Jonathan Santucci", "Position": "P", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 316, "Name": "Mitch Voit", "Position": "2B", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 317, "Name": "Nick Morabito", "Position": "2B", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 318, "Name": "Nolan McLean", "Position": "P", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 319, "Name": "Ryan Clifford", "Position": "1B/OF", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 320, "Name": "Wandy Asigen", "Position": "SS", "MLB Org": "NYM", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 321, "Name": "Ben Hess", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 322, "Name": "Bryce Cunningham", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 323, "Name": "Carlos Lagrange", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 324, "Name": "Chase Hampton", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 325, "Name": "Dax Kilby", "Position": "SS", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 326, "Name": "Elmer Rodriguez", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 327, "Name": "George Lombard", "Position": "SS", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 328, "Name": "Henry Lalane", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 329, "Name": "Richard Matic", "Position": "3B", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 330, "Name": "Sean Linan", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 331, "Name": "Spencer Jones", "Position": "OF", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 332, "Name": "Thatcher Hurd", "Position": "P", "MLB Org": "NYY", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 333, "Name": "Aidan Miller", "Position": "SS", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 334, "Name": "Andrew Painter", "Position": "P", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 335, "Name": "Aroon Escobar", "Position": "2B", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 336, "Name": "Carson DeMartini", "Position": "3B", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 337, "Name": "Dante Nori", "Position": "OF", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 338, "Name": "Francisco Renteria", "Position": "OF", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 339, "Name": "Gabriel Rincones", "Position": "OF", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 340, "Name": "Gage Wood", "Position": "P", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 341, "Name": "Griffin Burkholder", "Position": "OF", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 342, "Name": "Justin Crawford", "Position": "OF", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 343, "Name": "Matthew Fisher", "Position": "P", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 344, "Name": "Moises Chace", "Position": "P", "MLB Org": "PHI", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 345, "Name": "Antwone Kelly", "Position": "P", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 346, "Name": "Brian Sanchez", "Position": "OF", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 347, "Name": "Bubba Chandler", "Position": "P", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 348, "Name": "Darell Morel", "Position": "SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 349, "Name": "Edward Florentino", "Position": "OF", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 350, "Name": "Esmerlyn Valdez", "Position": "1B/OF", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 351, "Name": "Hunter Barco", "Position": "P", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 352, "Name": "Jeancer Custodio", "Position": "OF", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 353, "Name": "Jhostynxon Garcia", "Position": "OF", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 354, "Name": "Keiner Delgado", "Position": "2B/SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 355, "Name": "Konnor Griffin", "Position": "SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 356, "Name": "Nick Yorke", "Position": "2B/OF", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 357, "Name": "Rafael Flores", "Position": "C/1B", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 358, "Name": "Sammy Stafura", "Position": "SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 359, "Name": "Seth Hernandez", "Position": "P", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 360, "Name": "Termarr Johnson", "Position": "2B/SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 361, "Name": "Thomas Harrington", "Position": "P", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 362, "Name": "Wilber Dotel", "Position": "P", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 363, "Name": "Wilton Guerrero Jr.", "Position": "SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 364, "Name": "Wyatt Sanford", "Position": "SS", "MLB Org": "PIT", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 365, "Name": "Ethan Salas", "Position": "C", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 366, "Name": "Humberto Cruz", "Position": "P", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 367, "Name": "Joniel Hernandez", "Position": "SS", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 368, "Name": "Kale Fountain", "Position": "3B", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 369, "Name": "Kash Mayfield", "Position": "P", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 370, "Name": "Kruz Schoolcraft", "Position": "P", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 371, "Name": "Miguel Mendez", "Position": "P", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 372, "Name": "Ryan Wideman", "Position": "OF", "MLB Org": "SDP", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 373, "Name": "Cameron Appenzeller", "Position": "P", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 374, "Name": "Colt Emerson", "Position": "SS", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 375, "Name": "Felnin Celesten", "Position": "SS", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 376, "Name": "Gregory Pio", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 377, "Name": "Jared Sundstrom", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 378, "Name": "Jonny Farmelo", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 379, "Name": "Juan Rijo", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 380, "Name": "Kade Anderson", "Position": "P", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 381, "Name": "Lazaro Montes", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 382, "Name": "Logan Evans", "Position": "P", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 383, "Name": "Luke Stevenson", "Position": "C", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 384, "Name": "Michael Arroyo", "Position": "2B", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 385, "Name": "Nick Becker", "Position": "SS", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 386, "Name": "Ryan Bliss", "Position": "2B/SS", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 387, "Name": "Ryan Sloan", "Position": "P", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 388, "Name": "Tai Peete", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 389, "Name": "Yorger Bautista", "Position": "OF", "MLB Org": "SEA", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 390, "Name": "Bo Davidson", "Position": "OF", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 391, "Name": "Bryce Eldridge", "Position": "1B", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 392, "Name": "Carson Whisenhunt", "Position": "P", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 393, "Name": "Dakota Jordan", "Position": "OF", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 394, "Name": "Drew Gilbert", "Position": "OF", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 395, "Name": "Gavin Kilen", "Position": "2B/SS", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 396, "Name": "Jacob Bresnahan", "Position": "P", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 397, "Name": "Jhonny Level", "Position": "SS", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 398, "Name": "Josuar De Jesus Gonzalez", "Position": "SS", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 399, "Name": "Keyner Martinez", "Position": "P", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 400, "Name": "Luis Hernandez", "Position": "SS", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 401, "Name": "Nate Furman", "Position": "2B", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 402, "Name": "Parks Harber", "Position": "3B/1B", "MLB Org": "SFG", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 403, "Name": "Blaze Jordan", "Position": "1B/3B", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 404, "Name": "Brandon Clarke", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 405, "Name": "Chase Davis", "Position": "OF", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 406, "Name": "Chen-Wei Lin", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 407, "Name": "Cooper Hjerpe", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 408, "Name": "Deniel Ortiz", "Position": "1B/3B", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 409, "Name": "Emanuel Luna", "Position": "OF", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 410, "Name": "Ixan Henderson", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 411, "Name": "Jimmy Crooks", "Position": "C", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 412, "Name": "JJ Wetherholt", "Position": "2B/SS", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 413, "Name": "Joshua Baez", "Position": "OF", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 414, "Name": "Jurrangelo Cijntje", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 415, "Name": "Leonardo Bernal", "Position": "C", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 416, "Name": "Liam Doyle", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 417, "Name": "Nathan Church", "Position": "OF", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 418, "Name": "Quinn Mathews", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 419, "Name": "Rainiel Rodriguez", "Position": "C", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 420, "Name": "Ryan Mitchell", "Position": "SS", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 421, "Name": "Sebastian Dos Santos", "Position": "2B/SS", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 422, "Name": "Tekoah Roby", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 423, "Name": "Tink Hence", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 424, "Name": "Yairo Padilla", "Position": "SS", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 425, "Name": "Yhoiker Fajardo", "Position": "P", "MLB Org": "STL", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 426, "Name": "Aidan Smith", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 427, "Name": "Anderson Brito", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 428, "Name": "Austin Overn", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 429, "Name": "Brailer Guerrero", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 430, "Name": "Brendan Summerhill", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 431, "Name": "Brody Hopkins", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 432, "Name": "Cade Bodine", "Position": "C", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 433, "Name": "Carson Williams", "Position": "SS", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 434, "Name": "Colton Ledbetter", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 435, "Name": "Cooper Kinney", "Position": "2B", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 436, "Name": "Daniel Pierce", "Position": "SS", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 437, "Name": "Everson Pereira", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 438, "Name": "Gary Gill Hill", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 439, "Name": "Jacob Melton", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 440, "Name": "James Quinn-Irons", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 441, "Name": "K.C. Hunt", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 442, "Name": "Leonardo Pineda", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 443, "Name": "Maykel Coret", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 444, "Name": "Michael Forret", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 445, "Name": "Santiago Suarez", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 446, "Name": "Slater de Brun", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 447, "Name": "Theo Gillen", "Position": "OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 448, "Name": "TJ Nichols", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 449, "Name": "Tre' Morgan", "Position": "1B/OF", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 450, "Name": "Trevor Harrison", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 451, "Name": "Ty Johnson", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 452, "Name": "Victor Valdez", "Position": "SS", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 453, "Name": "Xavier Isaac", "Position": "1B", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 454, "Name": "Yoniel Curet", "Position": "P", "MLB Org": "TBR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 455, "Name": "AJ Russell", "Position": "P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 456, "Name": "Braylin Morel", "Position": "OF", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 457, "Name": "Caden Scarborough", "Position": "P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 458, "Name": "David Davalillo", "Position": "P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 459, "Name": "Dustin Harris", "Position": "OF", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 460, "Name": "Dylan Dreiling", "Position": "OF", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 461, "Name": "Elian Rosario", "Position": "OF", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 462, "Name": "Elorky Rodriguez", "Position": "2B/OF", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 463, "Name": "Jose Corniell", "Position": "P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 464, "Name": "Josh Owens", "Position": "SS/P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 465, "Name": "Leandro Lopez", "Position": "P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 466, "Name": "Paulino Santana", "Position": "OF", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 467, "Name": "Sebastian Walcott", "Position": "SS", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 468, "Name": "Winston Santos", "Position": "P", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 469, "Name": "Yolfran Castillo", "Position": "SS", "MLB Org": "TEX", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 470, "Name": "Arjun Nimmala", "Position": "SS", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 471, "Name": "Charles McAdoo", "Position": "3B", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 472, "Name": "Gage Stanifer", "Position": "P", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 473, "Name": "Jake Cook", "Position": "OF", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 474, "Name": "Johnny King", "Position": "P", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 475, "Name": "Jojo Parker", "Position": "SS", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 476, "Name": "Juan Sanchez", "Position": "3B/SS", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 477, "Name": "Ricky Tiedemann", "Position": "P", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 478, "Name": "RJ Schreck", "Position": "OF", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 479, "Name": "Trey Yesavage", "Position": "P", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 480, "Name": "Yohendrick Pinango", "Position": "OF", "MLB Org": "TOR", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 481, "Name": "Abimelec Ortiz", "Position": "1B", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 482, "Name": "Alejandro Rosario", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 483, "Name": "Alex Clemmey", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 484, "Name": "Cade Cavalli", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 485, "Name": "David Sandlin", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 486, "Name": "Devin Fitz-Gerald", "Position": "2B/3B/SS", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 487, "Name": "Eli Willits", "Position": "SS", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 488, "Name": "Ethan Petry", "Position": "OF", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 489, "Name": "Gavin Fien", "Position": "SS", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 490, "Name": "Harry Ford", "Position": "C", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 491, "Name": "Isaias Suarez", "Position": "OF", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 492, "Name": "Jarlin Susana", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 493, "Name": "Luis Perales", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 494, "Name": "Luke Dickerson", "Position": "2B/SS", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 495, "Name": "Marconi German", "Position": "2B/SS", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 496, "Name": "Samil Serrano", "Position": "OF", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 497, "Name": "Seaver King", "Position": "SS", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 498, "Name": "Travis Sykora", "Position": "P", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 499, "Name": "Yeremy Cabrera", "Position": "OF", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}, {"Rank": 500, "Name": "Yohandy Morales", "Position": "3B", "MLB Org": "WAS", "Age": "", "Level": "", "ETA": "", "Bat": "", "Throw": "", "Notes": ""}];  // pre-loaded from Prospect_database.xlsx
+let dbSortCol  = 'Rank';
+let dbSortAsc  = true;
+let dbSearch   = '';
+let dbPosFilter = '';
+let dbLevelFilter = '';
+let dbStatusFilter = '';
+let selectedProspect = null;
+
+function getAllDraftedNames() {
+  const names = new Set();
+  leagueData.owners.forEach(o => o.roster.forEach(p => { if (p) names.add(p.trim().toLowerCase()); }));
+  return names;
+}
+
+function isProspectDrafted(name) {
+  return getAllDraftedNames().has(name.trim().toLowerCase());
+}
+
+function getProspectOwner(name) {
+  const key = name.trim().toLowerCase();
+  return leagueData.owners.find(o => o.roster.some(p => p && p.trim().toLowerCase() === key)) || null;
+}
+
+function levelClass(lvl) {
+  if (!lvl) return 'lvl-R';
+  const l = String(lvl).trim();
+  if (l === 'AAA') return 'lvl-AAA';
+  if (l === 'AA')  return 'lvl-AA';
+  if (l === 'A+')  return 'lvl-Ap';
+  if (l === 'A')   return 'lvl-A';
+  return 'lvl-R';
+}
+
+function renderDraftRoom(content) {
+  // Reset content styles set by draft room on every render
+  content.style.padding = '';
+  content.style.overflow = '';
+  content.style.display = '';
+
+  if (prospectDB.length === 0) {
+    content.style.padding = '24px';
+    content.innerHTML = `
+      <div class="no-db-state">
+        <div class="no-db-icon">⚾</div>
+        <div class="no-db-title">No Prospect Database Loaded</div>
+        <div class="no-db-sub">Upload your Excel prospect database (.xlsx) to enable the draft room.</div>
+        <label class="db-upload-btn" style="margin-top:8px;display:inline-block">
+          📂 Upload Database
+          <input type="file" accept=".xlsx" style="display:none" onchange="handleDBUpload(event)">
+        </label>
+      </div>`;
+    return;
+  }
+
+  // Apply draft room layout
+  content.style.padding = '0';
+  content.style.overflow = 'hidden';
+  content.style.display = 'flex';
+
+  const drafted = getAllDraftedNames();
+  const positions = [...new Set(prospectDB.map(p => p.Position).filter(Boolean))].sort();
+
+  // Filter
+  let filtered = prospectDB.filter(p => {
+    const q = dbSearch.toLowerCase();
+    const nameMatch = !dbSearch
+      || (p.Name||'').toLowerCase().includes(q)
+      || (p['MLB Org']||'').toLowerCase().includes(q)
+      || (p.Position||'').toLowerCase().includes(q);
+    const posMatch    = !dbPosFilter || p.Position === dbPosFilter;
+    const statusMatch = !dbStatusFilter
+      || (dbStatusFilter === 'available' && !drafted.has((p.Name||'').toLowerCase()))
+      || (dbStatusFilter === 'drafted'   &&  drafted.has((p.Name||'').toLowerCase()));
+    return nameMatch && posMatch && statusMatch;
+  });
+
+  // Sort
+  filtered.sort((a, b) => {
+    let av = a[dbSortCol], bv = b[dbSortCol];
+    if (typeof av === 'number' && typeof bv === 'number') return dbSortAsc ? av - bv : bv - av;
+    return dbSortAsc
+      ? String(av||'').localeCompare(String(bv||''))
+      : String(bv||'').localeCompare(String(av||''));
+  });
+
+  const availCount   = prospectDB.filter(p => !drafted.has((p.Name||'').toLowerCase())).length;
+  const draftedCount = prospectDB.length - availCount;
+  const posOptions   = positions.map(p => `<option value="${p}" ${dbPosFilter===p?'selected':''}>${p}</option>`).join('');
+
+  // Table columns — drop Level/ETA since DB doesn't have them, remove duplicate Org column
+  const cols = [
+    { key: 'Rank',     label: 'RK' },
+    { key: 'Name',     label: 'Player' },
+    { key: 'Position', label: 'POS' },
+    { key: 'MLB Org',  label: 'ORG' },
+    { key: 'Status',   label: 'Status' },
+  ];
+
+  const thHtml = cols.map(c => {
+    const isSorted = dbSortCol === c.key;
+    const arrow = isSorted ? (dbSortAsc ? ' ↑' : ' ↓') : '';
+    return `<th class="${isSorted?'sorted':''}" onclick="dbSort('${c.key}')">${c.label}${arrow}</th>`;
+  }).join('');
+
+  const rowsHtml = filtered.map(p => {
+    const isDrafted  = drafted.has((p.Name||'').toLowerCase());
+    const owner      = isDrafted ? getProspectOwner(p.Name) : null;
+    const ownerIdx   = owner ? leagueData.owners.indexOf(owner) : -1;
+    const isSelected = selectedProspect && selectedProspect.Name === p.Name;
+
+    const statusCell = isDrafted
+      ? `<span class="drafted-badge">${owner ? owner.name : 'Drafted'}</span>`
+      : `<span class="available-badge">Available</span>`;
+
+    return `<tr class="${isDrafted?'drafted':''} ${isSelected?'row-selected':''}"
+               onclick="selectProspect(${JSON.stringify(JSON.stringify(p))})">
+      <td class="rank-cell">${p.Rank||'—'}</td>
+      <td>
+        <div class="prospect-name">${p.Name||'—'}</div>
+      </td>
+      <td><span class="pos-badge">${p.Position||'—'}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${p['MLB Org']||'—'}</td>
+      <td>${statusCell}</td>
+    </tr>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div style="flex:1;display:flex;overflow:hidden">
+      <div class="db-panel">
+        <div class="db-toolbar">
+          <div class="db-toolbar-row">
+            <input class="db-search" placeholder="Search name, org, position…" value="${dbSearch}"
+              oninput="dbSearch=this.value;renderDraftRoom(document.getElementById('mainContent'))">
+            <select class="db-filter" onchange="dbPosFilter=this.value;renderDraftRoom(document.getElementById('mainContent'))">
+              <option value="">All Positions</option>${posOptions}
+            </select>
+            <select class="db-filter" onchange="dbStatusFilter=this.value;renderDraftRoom(document.getElementById('mainContent'))">
+              <option value="">All</option>
+              <option value="available" ${dbStatusFilter==='available'?'selected':''}>Available</option>
+              <option value="drafted"   ${dbStatusFilter==='drafted'?'selected':''}>Drafted</option>
+            </select>
+            <label class="db-upload-btn" title="Replace database with a new Excel file">
+              ↑ Replace DB
+              <input type="file" accept=".xlsx" style="display:none" onchange="handleDBUpload(event)">
+            </label>
+          </div>
+          <div class="db-stats-row">
+            <span class="db-stat-pill">Total: <span>${prospectDB.length}</span></span>
+            <span class="db-stat-pill" style="color:var(--accent2)">Available: <span>${availCount}</span></span>
+            <span class="db-stat-pill" style="color:var(--danger)">Drafted: <span>${draftedCount}</span></span>
+            <span class="db-stat-pill">Showing: <span>${filtered.length}</span></span>
+          </div>
+        </div>
+        <div class="db-table-wrap">
+          <table class="prospect-table">
+            <thead><tr>${thHtml}</tr></thead>
+            <tbody>${rowsHtml || '<tr><td colspan="5" style="padding:24px;text-align:center;color:var(--muted);font-family:\'DM Mono\',monospace;font-size:12px">No prospects match your filters</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="detail-panel" id="detailPanel">
+        ${renderDetailPanel()}
+      </div>
+    </div>`;
+}
+
+function dbSort(col) {
+  if (dbSortCol === col) dbSortAsc = !dbSortAsc;
+  else { dbSortCol = col; dbSortAsc = true; }
+  renderDraftRoom(document.getElementById('mainContent'));
+}
+
+function selectProspect(pJson) {
+  selectedProspect = JSON.parse(pJson);
+  // Just update the detail panel without re-rendering the whole table
+  const panel = document.getElementById('detailPanel');
+  if (panel) {
+    panel.innerHTML = renderDetailPanel();
+  }
+  // Highlight selected row without full re-render
+  document.querySelectorAll('.prospect-table tbody tr').forEach(row => {
+    row.classList.remove('row-selected');
+  });
+  event.currentTarget.classList.add('row-selected');
+}
+
+function renderDetailPanel() {
+  if (!selectedProspect) {
+    return `<div class="detail-empty">
+      <div class="detail-empty-icon">👆</div>
+      <div>Click any prospect to view details and assign them to a team</div>
+    </div>`;
+  }
+
+  const p          = selectedProspect;
+  const isDrafted  = isProspectDrafted(p.Name);
+  const owner      = isDrafted ? getProspectOwner(p.Name) : null;
+  const ownerIdx   = owner ? leagueData.owners.indexOf(owner) : -1;
+
+  // Build owner options showing open slot count
+  const ownerOptions = leagueData.owners.map((o, i) => {
+    const filled   = o.roster.filter(r => r).length;
+    const open     = o.roster.filter(r => !r).length;
+    const slotNote = open > 0 ? `${open} open slot${open>1?'s':''}` : 'no open slots — will append';
+    return `<option value="${o.id}">${o.name} · ${filled} prospects · ${slotNote}</option>`;
+  }).join('');
+
+  let draftSection;
+  if (isDrafted) {
+    const avatarClass = OWNER_COLORS[ownerIdx % 12];
+    draftSection = `
+      <div class="detail-drafted-by">
+        <div class="owner-avatar ${avatarClass}" style="width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--bg);flex-shrink:0">${owner.name[0]}</div>
+        <span>On <strong>${owner.name}</strong>'s roster</span>
+      </div>
+      <button class="btn-undraft" onclick="undraftProspect(${JSON.stringify(p.Name)})">
+        ✕ Remove from ${owner.name}'s Roster
+      </button>`;
+  } else {
+    draftSection = `
+      <div class="detail-draft-label">ASSIGN TO TEAM</div>
+      <select class="detail-draft-select" id="draftTargetOwner">${ownerOptions}</select>
+      <button class="btn-draft" onclick="draftProspect(${JSON.stringify(p.Name)})">
+        ⚾ Draft to Roster
+      </button>`;
+  }
+
+  return `
+    <div class="detail-header">
+      <div class="detail-rank">RANK #${p.Rank||'—'}</div>
+      <div class="detail-name">${p.Name}</div>
+      <div class="detail-org">${p['MLB Org']||'—'}</div>
+      <div class="detail-badges">
+        <span class="pos-badge">${p.Position||'—'}</span>
+        ${isDrafted
+          ? `<span class="drafted-badge">Drafted · ${owner.name}</span>`
+          : `<span class="available-badge">Available</span>`}
+      </div>
+    </div>
+    <div class="detail-draft-section" style="flex:1">${draftSection}</div>`;
+}
+
+function draftProspect(name) {
+  const sel = document.getElementById('draftTargetOwner');
+  if (!sel) return;
+  const ownerId = parseInt(sel.value);
+  const owner   = leagueData.owners.find(o => o.id === ownerId);
+  if (!owner) return;
+
+  // Fill first empty slot; if none, append
+  const emptyIdx = owner.roster.findIndex(r => !r);
+  if (emptyIdx >= 0) {
+    owner.roster[emptyIdx] = name;
+  } else {
+    owner.roster.push(name);
+  }
+
+  save();
+  selectedProspect = prospectDB.find(p => p.Name === name) || selectedProspect;
+  renderDraftRoom(document.getElementById('mainContent'));
+}
+
+function undraftProspect(name) {
+  const owner = getProspectOwner(name);
+  if (!owner) return;
+  const idx = owner.roster.findIndex(r => r && r.trim().toLowerCase() === name.trim().toLowerCase());
+  if (idx >= 0) owner.roster[idx] = ''; // restore as empty slot
+  save();
+  selectedProspect = prospectDB.find(p => p.Name === name) || selectedProspect;
+  renderDraftRoom(document.getElementById('mainContent'));
+}
+
+// ===== EXCEL UPLOAD =====
+function handleDBUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      parseXLSX(data);
+    } catch(err) {
+      alert('Error reading file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseXLSX(data) {
+  // Minimal XLSX parser — reads the shared strings and first sheet
+  // Uses SheetJS if available, otherwise falls back to basic parse
+  if (typeof XLSX !== 'undefined') {
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    prospectDB = rows.map(r => ({
+      Rank:     typeof r.Rank === 'number' ? r.Rank : parseInt(r.Rank)||999,
+      Name:     String(r.Name||'').trim(),
+      Position: String(r.Position||'').trim(),
+      'MLB Org':String(r['MLB Org']||'').trim(),
+      Age:      r.Age||'',
+      Level:    String(r.Level||'').trim(),
+      ETA:      r.ETA||'',
+      Bat:      String(r.Bat||'').trim(),
+      Throw:    String(r.Throw||'').trim(),
+      Notes:    String(r.Notes||'').trim(),
+    })).filter(r => r.Name);
+    dbSortCol = 'Rank'; dbSortAsc = true;
+    selectedProspect = null;
+    renderDraftRoom(document.getElementById('mainContent'));
+  } else {
+    alert('SheetJS library not loaded. Please refresh and try again.');
+  }
+}
+
+function downloadTemplate() {
+  // Create a simple CSV template for download since we can't ship binary xlsx from JS
+  const headers = ['Rank','Name','Position','MLB Org','Age','Level','ETA','Bat','Throw','Notes'];
+  const sample = [
+    [1,'Jackson Holliday','SS','Baltimore Orioles',21,'AAA',2026,'L','R','Elite prospect, top-of-the-order bat'],
+    [2,'Paul Skenes','RHP','Pittsburgh Pirates',23,'MLB',2024,'R','R','Already in majors, #1 starter upside'],
+  ];
+  let csv = headers.join(',') + '\n';
+  sample.forEach(row => { csv += row.map(v => `"${v}"`).join(',') + '\n'; });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'prospect_database_template.csv';
+  a.click();
+}
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>
