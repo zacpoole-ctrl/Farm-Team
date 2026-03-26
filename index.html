@@ -1048,6 +1048,125 @@
   .no-db-sub { font-size: 13px; max-width: 320px; line-height: 1.6; }
   .no-db-template { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); margin-top: 6px; cursor: pointer; text-decoration: underline; }
 
+  /* ===== MOBILE ===== */
+  @media (max-width: 640px) {
+
+    /* Header — stack on two rows */
+    header {
+      height: auto;
+      flex-wrap: wrap;
+      padding: 10px 14px;
+      gap: 8px;
+    }
+
+    .logo { font-size: 22px; letter-spacing: 2px; }
+
+    .header-actions { width: 100%; justify-content: space-between; }
+
+    .view-btn { padding: 5px 8px; font-size: 11px; letter-spacing: 0; }
+
+    .btn { padding: 8px 12px; font-size: 12px; }
+
+    /* Layout — sidebar hidden, content full width */
+    .layout { flex-direction: column; height: auto; min-height: calc(100vh - 110px); }
+
+    .sidebar { display: none; }
+
+    .content { padding: 14px; overflow-y: unset; }
+
+    /* Grid — single column */
+    .grid-view {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    /* Draft picks — single column */
+    .draft-view {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Stats bar — compact */
+    .stats-bar { gap: 8px; }
+    .stat-chip { padding: 8px 12px; }
+    .stat-chip-val { font-size: 20px; }
+
+    /* Single team view — full width */
+    .single-view { max-width: 100%; }
+
+    .team-header-full {
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .team-header-avatar-lg { width: 48px; height: 48px; font-size: 24px; }
+    .team-title { font-size: 24px; }
+
+    .team-header-full .btn-primary { width: 100%; text-align: center; }
+
+    /* Modal — full screen on mobile */
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      max-height: 92vh;
+      border-radius: 14px 14px 0 0;
+      margin-top: auto;
+    }
+
+    .modal-overlay {
+      align-items: flex-end;
+    }
+
+    /* Draft room — stack vertically */
+    #mainContent > div[style*="display:flex"] {
+      flex-direction: column !important;
+    }
+
+    .db-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; }
+
+    .detail-panel {
+      width: 100%;
+      min-width: 0;
+      max-height: 45vh;
+      border-top: 2px solid var(--accent);
+    }
+
+    /* Touch-friendly tap targets */
+    .owner-item { padding: 12px 16px; min-height: 44px; }
+    .tab-btn { padding: 12px 14px; min-height: 44px; }
+    .view-btn { min-height: 36px; }
+    .team-card-edit { padding: 8px 12px; min-height: 36px; }
+    .edit-roster-remove { padding: 4px 8px; min-height: 36px; font-size: 20px; }
+    .modal-close { padding: 8px; min-height: 44px; min-width: 44px; }
+
+    /* Inputs — prevent iOS zoom (font-size must be >= 16px) */
+    .form-input,
+    .db-search,
+    .db-filter,
+    .detail-draft-select,
+    .edit-roster-input,
+    .search-box { font-size: 16px; }
+
+    /* Table — hide ORG column to save space */
+    .prospect-table th:nth-child(4),
+    .prospect-table td:nth-child(4) { display: none; }
+
+    /* Draft toolbar — wrap rows tighter */
+    .db-toolbar { padding: 10px 12px; }
+    .db-toolbar-row { gap: 6px; }
+    .db-stats-row { flex-wrap: wrap; gap: 8px; }
+
+    /* Tab bar */
+    .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab-btn { white-space: nowrap; }
+  }
+
+  @media (max-width: 400px) {
+    .draft-view { grid-template-columns: 1fr; }
+    .view-btn { font-size: 10px; padding: 4px 6px; }
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
