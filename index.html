@@ -1337,6 +1337,52 @@
     gap: 12px;
   }
 
+  /* PROPOSAL CARDS */
+  .proposal-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .proposal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .proposal-who strong { color: var(--text); }
+  .proposal-sides {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .proposal-side { flex: 1; }
+  .proposal-owner {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .proposal-item {
+    font-size: 12px;
+    padding: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .proposal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1499,13 +1545,12 @@
 <div class="modal-overlay" id="tradeModal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Trade Builder</span>
+      <span class="modal-title" id="tradeModalTitle">Trade Builder</span>
       <button class="modal-close" onclick="closeModal('tradeModal')">×</button>
     </div>
     <div class="modal-body" id="tradeModalBody"></div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal('tradeModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="executeTrade()">Execute Trade</button>
+    <div class="modal-footer" id="tradeModalFooter">
+      <!-- populated by renderTradeModal based on role -->
     </div>
   </div>
 </div>
@@ -1544,6 +1589,7 @@
 const AUTH_KEY = 'farmLeagueAuth2026';
 const SESSION_KEY = 'farmLeagueSession2026';
 const ACTIVITY_KEY = 'farmLeagueActivity2026';
+const PROPOSALS_KEY = 'farmLeagueProposals2026';
 
 function defaultAuthData() {
   return {
@@ -1756,8 +1802,59 @@ function renderAdminPanel(content) {
       </div>`;
   }).join('');
 
+  const proposals = loadProposals();
+  const pending = proposals.filter(p => p.status === 'pending');
+  const resolved = proposals.filter(p => p.status !== 'pending');
+
+  const fmtDate = ts => new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+    + ' ' + new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+  const proposalRows = pending.length === 0
+    ? `<div style="padding:16px;color:var(--muted);font-size:13px">No pending trade proposals.</div>`
+    : pending.map(p => `
+        <div class="proposal-card">
+          <div class="proposal-header">
+            <span class="proposal-who">Proposed by <strong>${p.proposedBy}</strong></span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${fmtDate(p.ts)}</span>
+          </div>
+          <div class="proposal-sides">
+            <div class="proposal-side">
+              <div class="proposal-owner">${p.side1.ownerName} sends</div>
+              ${p.side1.items.length ? p.side1.items.map(it => `<div class="proposal-item">${it.label}${it.type==='ptbn'?' <span class="roster-tag tag-ptbn" style="font-size:9px">PTBN</span>':''}</div>`).join('') : '<div class="proposal-item" style="color:var(--muted)">Nothing</div>'}
+            </div>
+            <div style="font-size:20px;color:var(--accent);align-self:center">⇄</div>
+            <div class="proposal-side">
+              <div class="proposal-owner">${p.side2.ownerName} sends</div>
+              ${p.side2.items.length ? p.side2.items.map(it => `<div class="proposal-item">${it.label}${it.type==='ptbn'?' <span class="roster-tag tag-ptbn" style="font-size:9px">PTBN</span>':''}</div>`).join('') : '<div class="proposal-item" style="color:var(--muted)">Nothing</div>'}
+            </div>
+          </div>
+          <div class="proposal-actions">
+            <button class="btn" style="color:var(--danger);border-color:var(--danger);font-size:12px" onclick="resolveProposal(${p.id},'rejected')">Reject</button>
+            <button class="btn btn-primary" style="font-size:12px" onclick="resolveProposal(${p.id},'approved')">Execute Trade</button>
+          </div>
+        </div>`).join('');
+
+  const resolvedRows = resolved.length === 0 ? '' : `
+    <div class="roster-section" style="margin-top:20px">
+      <div class="section-title"><span>Resolved Proposals</span><span>${resolved.length}</span></div>
+      ${resolved.slice(0,10).map(p => `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border)">
+          <span class="activity-badge" style="background:${p.status==='approved'?'#4ae8a020':'#e84a4a20'};color:${p.status==='approved'?'var(--accent2)':'var(--danger)'};border:1px solid ${p.status==='approved'?'#4ae8a040':'#e84a4a40'}">${p.status.toUpperCase()}</span>
+          <span style="font-size:13px;flex:1">${p.side1.ownerName} ↔ ${p.side2.ownerName}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${p.proposedBy} · ${fmtDate(p.ts)}</span>
+        </div>`).join('')}
+    </div>`;
+
   content.innerHTML = `
     <div class="admin-view">
+      ${pending.length > 0 ? `
+        <div class="roster-section" style="margin-bottom:20px;border-color:var(--accent)">
+          <div class="section-title" style="color:var(--accent)">
+            <span>⚠ Pending Trade Proposals</span>
+            <span style="background:var(--accent);color:var(--bg);padding:1px 8px;border-radius:10px;font-size:11px">${pending.length}</span>
+          </div>
+          <div style="padding:12px;display:flex;flex-direction:column;gap:12px">${proposalRows}</div>
+        </div>` : ''}
       <div class="stats-bar" style="margin-bottom:24px">
         <div class="stat-chip">
           <div class="stat-chip-val">${authData.users.length}</div>
@@ -1812,6 +1909,7 @@ function renderAdminPanel(content) {
         <div class="admin-section-title">My Account</div>
         <button class="btn" onclick="openChangePasswordModal()">Change My Password</button>
       </div>
+      ${resolvedRows}
     </div>`;
 }
 
@@ -2070,13 +2168,21 @@ function renderSidebar() {
       </div>`;
   });
 
-  if (isAdmin()) {
+  if (currentUser) {
+    const pendingCount = loadProposals().filter(p => p.status === 'pending').length;
     sb.innerHTML += `
       <div class="sidebar-label" style="margin-top:12px">Actions</div>
       <div class="owner-item" onclick="openTradeModal()" style="color:var(--accent2)">
         <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:16px;">⇄</div>
-        <div class="owner-name">Trade Builder</div>
+        <div class="owner-name">${isAdmin() ? 'Trade Builder' : 'Propose Trade'}</div>
       </div>`;
+    if (isAdmin() && pendingCount > 0) {
+      sb.innerHTML += `
+        <div class="owner-item" onclick="switchTab('admin')" style="color:var(--danger)">
+          <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-family:'DM Mono',monospace;font-weight:600;color:var(--danger)">${pendingCount}</div>
+          <div class="owner-name" style="color:var(--danger)">Pending Trades</div>
+        </div>`;
+    }
   }
 }
 
@@ -2424,12 +2530,94 @@ function confirmAddPlayer() {
   render();
 }
 
+// ===== PROPOSALS =====
+function loadProposals() {
+  try { return JSON.parse(localStorage.getItem(PROPOSALS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveProposals(proposals) {
+  localStorage.setItem(PROPOSALS_KEY, JSON.stringify(proposals));
+}
+
+function proposeTrade() {
+  const s1 = tradeState.side1;
+  const s2 = tradeState.side2;
+  if (s1.ownerId === s2.ownerId) { alert('Select two different owners.'); return; }
+  if (s1.items.length === 0 && s2.items.length === 0) { alert('Add items to the trade.'); return; }
+
+  const owner1 = leagueData.owners.find(o => o.id === s1.ownerId);
+  const owner2 = leagueData.owners.find(o => o.id === s2.ownerId);
+
+  const proposals = loadProposals();
+  proposals.push({
+    id: Date.now(),
+    ts: Date.now(),
+    proposedBy: currentUser.username,
+    status: 'pending',
+    side1: { ownerId: s1.ownerId, ownerName: owner1.name, items: [...s1.items] },
+    side2: { ownerId: s2.ownerId, ownerName: owner2.name, items: [...s2.items] }
+  });
+  saveProposals(proposals);
+  logActivity('trade', `<strong>${currentUser.username}</strong> proposed a trade: ${owner1.name} ↔ ${owner2.name} (pending review)`);
+  closeModal('tradeModal');
+  render();
+  alert(`✅ Trade proposal submitted! An admin will review it.`);
+}
+
+function resolveProposal(id, status) {
+  const proposals = loadProposals();
+  const prop = proposals.find(p => p.id === id);
+  if (!prop) return;
+
+  if (status === 'approved') {
+    const owner1 = leagueData.owners.find(o => o.id === prop.side1.ownerId);
+    const owner2 = leagueData.owners.find(o => o.id === prop.side2.ownerId);
+    if (!owner1 || !owner2) { alert('Could not find one or both owners.'); return; }
+
+    prop.side1.items.forEach(it => {
+      if (it.type === 'player') {
+        owner1.roster = owner1.roster.filter(p => p !== it.label);
+        owner2.roster.push(it.label);
+      } else {
+        owner1.ptbn = owner1.ptbn.filter(p => p !== it.label);
+        owner2.ptbn.push(it.label);
+      }
+    });
+    prop.side2.items.forEach(it => {
+      if (it.type === 'player') {
+        owner2.roster = owner2.roster.filter(p => p !== it.label);
+        owner1.roster.push(it.label);
+      } else {
+        owner2.ptbn = owner2.ptbn.filter(p => p !== it.label);
+        owner1.ptbn.push(it.label);
+      }
+    });
+
+    const s1Summary = prop.side1.items.map(i => i.label).join(', ') || 'nothing';
+    const s2Summary = prop.side2.items.map(i => i.label).join(', ') || 'nothing';
+    logActivity('trade', `<strong>${owner1.name}</strong> receives ${s2Summary} · <strong>${owner2.name}</strong> receives ${s1Summary} (approved by ${currentUser.username})`);
+    save();
+  } else {
+    logActivity('trade', `Trade proposal by <strong>${prop.proposedBy}</strong> (${prop.side1.ownerName} ↔ ${prop.side2.ownerName}) rejected by ${currentUser.username}`);
+  }
+
+  prop.status = status;
+  prop.resolvedBy = currentUser.username;
+  prop.resolvedTs = Date.now();
+  saveProposals(proposals);
+  render();
+}
+
 // ===== TRADE MODAL =====
 function openTradeModal() {
+  // Pre-select the logged-in user's team as side1 if they have one
+  const myOwnerId = currentUser?.ownerId;
+  const defaultSide1 = myOwnerId != null ? myOwnerId : leagueData.owners[0].id;
+  const defaultSide2 = leagueData.owners.find(o => o.id !== defaultSide1)?.id ?? leagueData.owners[1].id;
   tradeState = {
-    side1: { ownerId: leagueData.owners[0].id, items: [] },
-    side2: { ownerId: leagueData.owners[1].id, items: [] }
+    side1: { ownerId: defaultSide1, items: [] },
+    side2: { ownerId: defaultSide2, items: [] }
   };
+  document.getElementById('tradeModalTitle').textContent = isAdmin() ? 'Trade Builder' : 'Propose Trade';
   renderTradeModal();
   document.getElementById('tradeModal').classList.add('open');
 }
@@ -2462,6 +2650,14 @@ function renderTradeModal() {
       ${buildSide('side1','SIDE A')}
       <div style="display:flex;align-items:center;padding-top:30px;font-size:22px;color:var(--accent);flex-shrink:0">⇄</div>
       ${buildSide('side2','SIDE B')}
+    </div>`;
+
+  const footer = document.getElementById('tradeModalFooter');
+  footer.innerHTML = `
+    <button class="btn" onclick="closeModal('tradeModal')">Cancel</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="proposeTrade()" style="color:var(--accent2);border-color:var(--accent2)">Propose Trade</button>
+      ${isAdmin() ? `<button class="btn btn-primary" onclick="executeTrade()">Execute Trade</button>` : ''}
     </div>`;
 }
 
