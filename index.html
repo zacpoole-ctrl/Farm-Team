@@ -1548,7 +1548,8 @@ const ACTIVITY_KEY = 'farmLeagueActivity2026';
 function defaultAuthData() {
   return {
     users: [
-      { username: 'admin', password: 'admin2026', email: '', role: 'admin', ownerId: null }
+      { username: 'admin', password: 'admin2026', email: '', role: 'admin', ownerId: null },
+      { username: 'zacpoole', password: 'admin', email: '', role: 'admin', ownerId: 11 }
     ]
   };
 }
@@ -1566,6 +1567,22 @@ function saveAuthData(data) {
 }
 
 let authData = loadAuthData();
+
+// Ensure built-in accounts always exist
+(function migrateAuthData() {
+  const builtIn = [
+    { username: 'admin',    password: 'admin2026', email: '', role: 'admin', ownerId: null },
+    { username: 'zacpoole', password: 'admin',     email: '', role: 'admin', ownerId: 11   }
+  ];
+  let changed = false;
+  builtIn.forEach(def => {
+    if (!authData.users.find(u => u.username === def.username)) {
+      authData.users.push(def);
+      changed = true;
+    }
+  });
+  if (changed) saveAuthData(authData);
+})();
 let currentUser = null;
 
 function initSession() {
