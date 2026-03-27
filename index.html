@@ -1700,7 +1700,7 @@
       <span></span><span></span><span></span>
     </button>
     <div class="logo">
-      ⚾ Farm Team League
+      ⚾ LOEG Farm Team
       <span class="logo-badge">2026</span>
     </div>
   </div>
@@ -2356,7 +2356,7 @@ function importLeagueData(event) {
 
     // Basic validation
     if (!snapshot.leagueData || !Array.isArray(snapshot.leagueData.owners)) {
-      show('File does not appear to be a valid Farm League export.', false);
+      show('File does not appear to be a valid LOEG Farm Team export.', false);
       return;
     }
     if (!confirm(`Import backup from ${snapshot.exportedAt ? new Date(snapshot.exportedAt).toLocaleString() : 'unknown date'}?\n\nThis will overwrite all current league data, rosters, picks, proposals, and the activity log.`)) {
