@@ -1130,27 +1130,44 @@
 
   @media (max-width: 640px) {
 
-    /* Header — stack on two rows */
+    /* Header — single compact row */
     header {
-      height: auto;
-      flex-wrap: wrap;
-      padding: 10px 14px;
+      height: 54px;
+      padding: 0 12px;
+      flex-wrap: nowrap;
       gap: 8px;
     }
 
-    .logo { font-size: 22px; letter-spacing: 2px; }
+    .logo { font-size: 20px; letter-spacing: 1px; }
+    .logo-badge { display: none; }
 
-    .header-actions { width: 100%; justify-content: space-between; }
+    /* Hide desktop nav — drawer handles navigation */
+    .view-toggle { display: none; }
 
-    .view-btn { padding: 5px 8px; font-size: 11px; letter-spacing: 0; }
+    /* Collapse header-actions to fit one row */
+    .header-actions {
+      width: auto;
+      flex: 1;
+      justify-content: flex-end;
+      gap: 6px;
+    }
 
-    .btn { padding: 8px 12px; font-size: 12px; }
+    /* Hide addPlayer button text on mobile (keep it accessible via drawer) */
+    #addPlayerBtn { display: none !important; }
+
+    /* Shrink user chip */
+    .user-chip { gap: 6px; }
+    .user-chip-name { display: none; }
+    .user-chip-role { display: none; }
+
+    .btn { padding: 7px 10px; font-size: 12px; }
+    .btn-logout { padding: 7px 10px; font-size: 12px; }
 
     /* Hamburger — show on mobile */
     .mobile-menu-btn { display: flex; }
 
     /* Layout — sidebar hidden, content full width */
-    .layout { flex-direction: column; height: auto; min-height: calc(100vh - 110px); }
+    .layout { flex-direction: column; height: auto; min-height: calc(100vh - 54px); }
 
     .sidebar { display: none; }
 
@@ -1187,8 +1204,8 @@
 
     .team-header-full .btn-primary { width: 100%; text-align: center; }
 
-    /* Modal — full screen on mobile */
-    .modal {
+    /* Modal — bottom sheet on mobile (except search) */
+    .modal-overlay:not(:has(.search-modal)) .modal {
       width: 100%;
       max-width: 100%;
       max-height: 92vh;
@@ -1196,8 +1213,21 @@
       margin-top: auto;
     }
 
-    .modal-overlay {
+    .modal-overlay:not(:has(.search-modal)) {
       align-items: flex-end;
+    }
+
+    /* Search modal — top sheet on mobile */
+    .modal-overlay:has(.search-modal) {
+      align-items: flex-start;
+      padding-top: 0;
+    }
+    .search-modal {
+      margin-top: 0;
+      border-radius: 0 0 14px 14px;
+      max-height: 80vh;
+      width: 100%;
+      max-width: 100%;
     }
 
     /* Draft room — stack vertically */
@@ -1589,8 +1619,6 @@
   @media (max-width: 640px) {
     .search-btn-label { display: none; }
     .search-header-btn { padding: 8px; }
-    .modal-overlay:has(.search-modal) { padding-top: 0; align-items: flex-start; }
-    .search-modal { margin-top: 0; border-radius: 0 0 12px 12px; max-height: 80vh; }
   }
 
 </style>
@@ -2560,20 +2588,35 @@ function renderMobileDrawer() {
       </div>`;
   });
 
-  if (currentUser) {
-    html += `<div class="drawer-section-label" style="margin-top:4px">Actions</div>`;
+  html += `<div class="drawer-section-label" style="margin-top:4px">Actions</div>`;
+
+  if (isAdmin()) {
     html += `
-      <div class="owner-item" onclick="drawerAction('trade')" style="color:var(--accent2)">
-        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">⇄</div>
-        <div class="owner-name">${isAdmin() ? 'Trade Builder' : 'Propose Trade'}</div>
+      <div class="owner-item" onclick="drawerAction('addPlayer')" style="color:var(--accent)">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">＋</div>
+        <div class="owner-name">Add Player</div>
       </div>`;
-    if (isAdmin() && pendingCount > 0) {
-      html += `
-        <div class="owner-item" onclick="drawerAction('pending')" style="color:var(--danger)">
-          <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--danger)">${pendingCount}</div>
-          <div class="owner-name" style="color:var(--danger)">Pending Trades</div>
-        </div>`;
-    }
+  }
+
+  html += `
+    <div class="owner-item" onclick="drawerAction('trade')" style="color:var(--accent2)">
+      <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">⇄</div>
+      <div class="owner-name">${isAdmin() ? 'Trade Builder' : 'Propose Trade'}</div>
+    </div>`;
+
+  if (!currentUser) {
+    html += `
+      <div class="owner-item" onclick="drawerAction('signin')" style="color:var(--muted);font-size:12px;padding-left:52px">
+        Sign in to propose trades
+      </div>`;
+  }
+
+  if (isAdmin() && pendingCount > 0) {
+    html += `
+      <div class="owner-item" onclick="drawerAction('pending')" style="color:var(--danger)">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--danger)">${pendingCount}</div>
+        <div class="owner-name" style="color:var(--danger)">Pending Trades</div>
+      </div>`;
   }
 
   html += `<div class="drawer-section-label" style="margin-top:4px">Views</div>`;
@@ -2608,8 +2651,16 @@ function drawerSwitchTab(tab) {
 
 function drawerAction(action) {
   closeMobileDrawer();
-  if (action === 'trade') openTradeModal();
-  else if (action === 'pending') switchTab('admin');
+  if (action === 'trade') {
+    if (!currentUser) { openLoginModal(); return; }
+    openTradeModal();
+  } else if (action === 'pending') {
+    switchTab('admin');
+  } else if (action === 'addPlayer') {
+    openAddPlayerModal();
+  } else if (action === 'signin') {
+    openLoginModal();
+  }
 }
 
 function renderContent() {
