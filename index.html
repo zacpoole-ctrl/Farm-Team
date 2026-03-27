@@ -1049,6 +1049,85 @@
   .no-db-template { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); margin-top: 6px; cursor: pointer; text-decoration: underline; }
 
   /* ===== MOBILE ===== */
+  /* MOBILE HAMBURGER */
+  .mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 38px;
+    height: 38px;
+    padding: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mobile-menu-btn span {
+    display: block;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+
+  /* MOBILE DRAWER */
+  .drawer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .drawer-backdrop.open { display: block; }
+
+  .mobile-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100dvh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 201;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-drawer.open { transform: translateX(0); }
+
+  .mobile-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .mobile-drawer-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  .drawer-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    padding: 14px 16px 6px;
+    text-transform: uppercase;
+  }
+
   @media (max-width: 640px) {
 
     /* Header — stack on two rows */
@@ -1066,6 +1145,9 @@
     .view-btn { padding: 5px 8px; font-size: 11px; letter-spacing: 0; }
 
     .btn { padding: 8px 12px; font-size: 12px; }
+
+    /* Hamburger — show on mobile */
+    .mobile-menu-btn { display: flex; }
 
     /* Layout — sidebar hidden, content full width */
     .layout { flex-direction: column; height: auto; min-height: calc(100vh - 110px); }
@@ -1456,6 +1538,10 @@
 </div>
 
 <header>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="openMobileDrawer()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
   <div class="logo">
     ⚾ LOEG Farm Team
     <span class="logo-badge">2026</span>
@@ -1478,6 +1564,18 @@
     <button class="btn-logout" id="logoutBtn" onclick="doLogout()" style="display:none">Sign Out</button>
   </div>
 </header>
+
+<!-- MOBILE DRAWER -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeMobileDrawer()"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-drawer-header">
+    <span class="mobile-drawer-title">Navigation</span>
+    <button class="modal-close" onclick="closeMobileDrawer()" style="font-size:22px;line-height:1">×</button>
+  </div>
+  <div id="mobileDrawerContent">
+    <!-- populated by renderMobileDrawer() -->
+  </div>
+</div>
 
 <div class="layout">
   <!-- SIDEBAR -->
@@ -1909,6 +2007,22 @@ function renderAdminPanel(content) {
         <div class="admin-section-title">My Account</div>
         <button class="btn" onclick="openChangePasswordModal()">Change My Password</button>
       </div>
+
+      <div style="margin-top:20px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+        <div class="admin-section-title">Import / Export</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+          Export saves all league data, user accounts, trade proposals, and activity log to a single JSON file.
+          Import restores from a previously exported file — this will overwrite current data.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary" onclick="exportLeagueData()">⬇ Export League Data</button>
+          <label class="btn" style="cursor:pointer;margin:0">
+            ⬆ Import League Data
+            <input type="file" accept=".json" style="display:none" onchange="importLeagueData(event)" />
+          </label>
+        </div>
+        <div id="importStatus" style="margin-top:10px;font-size:12px;display:none"></div>
+      </div>
       ${resolvedRows}
     </div>`;
 }
@@ -2016,6 +2130,88 @@ function clearActivityLog() {
   if (!confirm('Clear the entire activity log?')) return;
   localStorage.removeItem(ACTIVITY_KEY);
   renderActivityLog(document.getElementById('mainContent'));
+}
+
+// ===== IMPORT / EXPORT =====
+function exportLeagueData() {
+  const snapshot = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedBy: currentUser.username,
+    leagueData,
+    authData,
+    proposals: loadProposals(),
+    activityLog: JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]')
+  };
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `farm-league-backup-${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  logActivity('roster', `League data exported by <strong>${currentUser.username}</strong>`);
+}
+
+function importLeagueData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('importStatus');
+  const show = (msg, ok) => {
+    statusEl.style.display = 'block';
+    statusEl.style.color = ok ? 'var(--accent2)' : 'var(--danger)';
+    statusEl.textContent = msg;
+  };
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let snapshot;
+    try {
+      snapshot = JSON.parse(e.target.result);
+    } catch(err) {
+      show('Invalid JSON file — could not parse.', false);
+      return;
+    }
+
+    // Basic validation
+    if (!snapshot.leagueData || !Array.isArray(snapshot.leagueData.owners)) {
+      show('File does not appear to be a valid Farm League export.', false);
+      return;
+    }
+    if (!confirm(`Import backup from ${snapshot.exportedAt ? new Date(snapshot.exportedAt).toLocaleString() : 'unknown date'}?\n\nThis will overwrite all current league data, rosters, picks, proposals, and the activity log.`)) {
+      show('Import cancelled.', false);
+      event.target.value = '';
+      return;
+    }
+
+    leagueData = snapshot.leagueData;
+    save();
+
+    if (snapshot.authData && Array.isArray(snapshot.authData.users)) {
+      authData = snapshot.authData;
+      saveAuthData(authData);
+      // Re-validate current session against imported auth
+      if (currentUser) {
+        const stillValid = authData.users.find(u => u.username === currentUser.username && u.password === currentUser.password);
+        if (!stillValid) { currentUser = null; sessionStorage.removeItem(SESSION_KEY); }
+        else currentUser = stillValid;
+      }
+    }
+    if (Array.isArray(snapshot.proposals)) {
+      saveProposals(snapshot.proposals);
+    }
+    if (Array.isArray(snapshot.activityLog)) {
+      localStorage.setItem(ACTIVITY_KEY, JSON.stringify(snapshot.activityLog));
+    }
+
+    logActivity('roster', `League data imported from backup (${snapshot.exportedAt ? snapshot.exportedAt.slice(0,10) : 'unknown date'}) by <strong>${currentUser?.username || 'admin'}</strong>`);
+    show(`Import successful! Restored ${leagueData.owners.length} teams from ${snapshot.exportedAt ? new Date(snapshot.exportedAt).toLocaleDateString() : 'backup'}.`, true);
+    applyAuthUI();
+    render();
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be re-imported if needed
 }
 
 // ===== DATA =====
@@ -2184,6 +2380,87 @@ function renderSidebar() {
         </div>`;
     }
   }
+}
+
+// ===== MOBILE DRAWER =====
+function openMobileDrawer() {
+  renderMobileDrawer();
+  document.getElementById('mobileDrawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMobileDrawer() {
+  document.getElementById('mobileDrawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderMobileDrawer() {
+  const dc = document.getElementById('mobileDrawerContent');
+  const pendingCount = loadProposals().filter(p => p.status === 'pending').length;
+
+  let html = `<div class="drawer-section-label">Teams</div>`;
+  leagueData.owners.forEach((owner, i) => {
+    const active = selectedOwner === owner.id ? ' active' : '';
+    html += `
+      <div class="owner-item${active}" onclick="drawerSelectOwner(${owner.id})">
+        <div class="owner-avatar ${OWNER_COLORS[i % 12]}">${owner.name[0]}</div>
+        <div class="owner-name">${owner.name}</div>
+        <span class="owner-count">${owner.roster.filter(p=>p).length}</span>
+      </div>`;
+  });
+
+  if (currentUser) {
+    html += `<div class="drawer-section-label" style="margin-top:4px">Actions</div>`;
+    html += `
+      <div class="owner-item" onclick="drawerAction('trade')" style="color:var(--accent2)">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">⇄</div>
+        <div class="owner-name">${isAdmin() ? 'Trade Builder' : 'Propose Trade'}</div>
+      </div>`;
+    if (isAdmin() && pendingCount > 0) {
+      html += `
+        <div class="owner-item" onclick="drawerAction('pending')" style="color:var(--danger)">
+          <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--danger)">${pendingCount}</div>
+          <div class="owner-name" style="color:var(--danger)">Pending Trades</div>
+        </div>`;
+    }
+  }
+
+  html += `<div class="drawer-section-label" style="margin-top:4px">Views</div>`;
+  const views = [
+    { tab: 'all',      label: 'All Teams' },
+    { tab: 'draft',    label: 'Draft Picks' },
+    { tab: 'database', label: '⚾ Draft Room' },
+    { tab: 'activity', label: '📋 Activity' },
+  ];
+  if (isAdmin()) views.push({ tab: 'admin', label: '⚙ Admin' });
+  views.forEach(v => {
+    const active = (currentTab === v.tab && selectedOwner === null) ? ' active' : '';
+    html += `
+      <div class="owner-item${active}" onclick="drawerSwitchTab('${v.tab}')">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted)">→</div>
+        <div class="owner-name">${v.label}</div>
+      </div>`;
+  });
+
+  dc.innerHTML = html;
+}
+
+function drawerSelectOwner(id) {
+  closeMobileDrawer();
+  selectOwner(id);
+}
+
+function drawerSwitchTab(tab) {
+  closeMobileDrawer();
+  switchTab(tab);
+}
+
+function drawerAction(action) {
+  closeMobileDrawer();
+  if (action === 'trade') openTradeModal();
+  else if (action === 'pending') switchTab('admin');
 }
 
 function renderContent() {
