@@ -3322,21 +3322,32 @@ function submitTradeProposal() {
   const owner1 = leagueData.owners.find(o => o.id === s1.ownerId);
   const owner2 = leagueData.owners.find(o => o.id === s2.ownerId);
 
-  const proposals = loadProposals();
-  proposals.push({
+  const proposal = {
     id: Date.now(),
     ts: Date.now(),
     proposedBy: currentUser.username,
     status: 'pending',
     side1: { ownerId: s1.ownerId, ownerName: owner1.name, items: [...s1.items] },
     side2: { ownerId: s2.ownerId, ownerName: owner2.name, items: [...s2.items] }
-  });
+  };
+  const proposals = loadProposals();
+  proposals.push(proposal);
   saveProposals(proposals);
+  if (sb) {
+    sb.from('trade_proposals').insert({
+      id: proposal.id,
+      ts: new Date(proposal.ts).toISOString(),
+      proposed_by: proposal.proposedBy,
+      status: proposal.status,
+      side1: proposal.side1,
+      side2: proposal.side2
+    }).then(({ error }) => { if (error) console.warn('[DB] trade proposal error:', error.message); });
+  }
   logActivity('trade', `<strong>${currentUser.username}</strong> proposed a trade: ${owner1.name} ↔ ${owner2.name} (pending review)`);
   closeModal('tradeConfirmModal');
   closeModal('tradeModal');
   render();
-  alert(`✅ Trade proposal submitted! An admin will review it.`);
+  showToast('&#x2705; Trade proposal submitted! An admin will review it.');
 }
 
 function resolveProposal(id, status) {
