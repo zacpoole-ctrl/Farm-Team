@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LOEG Farm Team</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg: #0d0f14;
@@ -1931,6 +1932,103 @@ const AUTH_KEY = 'farmLeagueAuth2026';
 const SESSION_KEY = 'farmLeagueSession2026';
 const ACTIVITY_KEY = 'farmLeagueActivity2026';
 const PROPOSALS_KEY = 'farmLeagueProposals2026';
+const LEAGUE_KEY    = 'farmTeagLeague2026';
+
+// ===== SUPABASE =====
+const SUPABASE_URL      = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_ENABLED  = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+let sb = null;
+
+async function initSupabase() {
+  if (!SUPABASE_ENABLED) return false;
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  } catch(e) { console.warn('[Supabase] init failed:', e); return false; }
+}
+
+function setDbStatus(status) {
+  const el = document.getElementById('dbStatusDot');
+  if (!el) return;
+  const colors = { connecting:'#e8c84a', online:'#4ae8a0', offline:'#6b7280', error:'#e84a4a' };
+  el.style.background = colors[status] || colors.offline;
+  el.title = 'Database: ' + status;
+}
+
+function injectDbStatusDot() {
+  if (!SUPABASE_ENABLED) return;
+  if (document.getElementById('dbStatusDot')) return;
+  const dot = document.createElement('div');
+  dot.id = 'dbStatusDot';
+  dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:#e8c84a;flex-shrink:0;transition:background 0.3s;margin-left:6px;cursor:default';
+  const logo = document.querySelector('.logo');
+  if (logo) logo.appendChild(dot);
+}
+
+function showToast(message, duration = 4000) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none';
+    document.body.appendChild(container);
+    const s = document.createElement('style');
+    s.textContent = '@keyframes toastIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}';
+    document.head.appendChild(s);
+  }
+  const toast = document.createElement('div');
+  toast.style.cssText = 'background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,0.4);animation:toastIn 0.2s ease;max-width:320px;pointer-events:auto';
+  toast.innerHTML = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+function subscribeRealtime() {
+  if (!sb) return;
+  sb.channel('league-state')
+    .on('postgres_changes', { event:'UPDATE', schema:'public', table:'league_state' }, payload => {
+      if (payload.new && payload.new.data) {
+        const updatedBy = payload.new.updated_by;
+        if (updatedBy && currentUser && updatedBy === currentUser.username) return;
+        leagueData = payload.new.data;
+        localStorage.setItem(LEAGUE_KEY, JSON.stringify(leagueData));
+        showToast('&#x1F504; Roster update from ' + (updatedBy || 'another user'));
+        render();
+      }
+    }).subscribe();
+  sb.channel('activity-feed')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'activity_log' }, payload => {
+      const entry = payload.new;
+      if (entry && currentUser && entry.actor !== currentUser.username) {
+        try {
+          let log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+          log.unshift({ ts: new Date(entry.ts).getTime(), type: entry.type, actor: entry.actor, details: entry.details });
+          if (log.length > 200) log = log.slice(0, 200);
+          localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
+        } catch(e) {}
+        if (currentTab === 'activity') renderActivityLog(document.getElementById('mainContent'));
+      }
+    }).subscribe();
+  sb.channel('trade-proposals')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'trade_proposals' }, payload => {
+      const prop = payload.new;
+      if (prop && isAdmin()) {
+        const proposals = loadProposals();
+        if (!proposals.find(p => p.id === prop.id)) {
+          proposals.unshift({ id: prop.id, ts: new Date(prop.ts).getTime(), proposedBy: prop.proposed_by, status: prop.status, side1: prop.side1, side2: prop.side2 });
+          saveProposals(proposals);
+          showToast('&#x26BE; New trade proposal from ' + prop.proposed_by);
+          renderSidebar();
+        }
+      }
+    }).subscribe();
+  setDbStatus('online');
+}
 
 function defaultAuthData() {
   return {
@@ -1953,23 +2051,7 @@ function saveAuthData(data) {
   localStorage.setItem(AUTH_KEY, JSON.stringify(data));
 }
 
-let authData = loadAuthData();
-
-// Ensure built-in accounts always exist
-(function migrateAuthData() {
-  const builtIn = [
-    { username: 'admin',    password: 'admin2026', email: '', role: 'admin', ownerId: null },
-    { username: 'zacpoole', password: 'admin',     email: '', role: 'admin', ownerId: 11   }
-  ];
-  let changed = false;
-  builtIn.forEach(def => {
-    if (!authData.users.find(u => u.username === def.username)) {
-      authData.users.push(def);
-      changed = true;
-    }
-  });
-  if (changed) saveAuthData(authData);
-})();
+let authData = { users: [] }; // populated by boot()
 let currentUser = null;
 
 function initSession() {
@@ -2306,16 +2388,21 @@ function saveAdminUsers() {
 
 // ===== ACTIVITY LOG =====
 function logActivity(type, details) {
-  let log = [];
-  try { log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]'); } catch(e) {}
-  log.unshift({
-    ts: Date.now(),
-    type,
-    actor: currentUser ? currentUser.username : 'system',
-    details
-  });
-  if (log.length > 200) log = log.slice(0, 200);
-  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
+  const entry = { ts: Date.now(), type, actor: currentUser ? currentUser.username : 'system', details };
+  try {
+    let log = JSON.parse(localStorage.getItem(ACTIVITY_KEY) || '[]');
+    log.unshift(entry);
+    if (log.length > 200) log = log.slice(0, 200);
+    localStorage.setItem(ACTIVITY_KEY, JSON.stringify(log));
+  } catch(e) {}
+  if (sb) {
+    sb.from('activity_log').insert({
+      ts: new Date(entry.ts).toISOString(),
+      type: entry.type,
+      actor: entry.actor,
+      details: entry.details
+    }).then(({ error }) => { if (error) console.warn('[DB] logActivity error:', error.message); });
+  }
 }
 
 function renderActivityLog(content) {
@@ -2566,18 +2653,35 @@ let leagueData = {
   ]
 };
 
-// Save to localStorage
+// Save to localStorage (+ Supabase if enabled)
 function save() {
-  localStorage.setItem('farmTeagLeague2026', JSON.stringify(leagueData));
+  localStorage.setItem(LEAGUE_KEY, JSON.stringify(leagueData));
+  if (sb) {
+    sb.from('league_state').upsert({
+      id: 1,
+      data: leagueData,
+      updated_at: new Date().toISOString(),
+      updated_by: currentUser ? currentUser.username : 'system'
+    }).then(({ error }) => { if (error) console.warn('[DB] save error:', error.message); });
+  }
 }
 
-function load() {
-  const stored = localStorage.getItem('farmTeagLeague2026');
+async function load() {
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('league_state').select('data').eq('id', 1).single();
+      if (!error && data && data.data) {
+        leagueData = data.data;
+        localStorage.setItem(LEAGUE_KEY, JSON.stringify(leagueData));
+        return;
+      }
+    } catch(e) { console.warn('[DB] load error:', e); }
+  }
+  const stored = localStorage.getItem(LEAGUE_KEY);
   if (stored) {
     try { leagueData = JSON.parse(stored); } catch(e) {}
   }
 }
-load();
 
 // ===== STATE =====
 let currentTab = 'all';
@@ -3867,9 +3971,38 @@ function downloadTemplate() {
 }
 
 // ===== INIT =====
-initSession();
-applyAuthUI();
-render();
+async function boot() {
+  injectDbStatusDot();
+  if (SUPABASE_ENABLED) setDbStatus('connecting');
+  const supabaseReady = await initSupabase();
+  await load();
+  authData = loadAuthData();
+  // Migrate built-in accounts
+  (function() {
+    const builtIn = [
+      { username: 'admin',    password: 'admin2026', email: '', role: 'admin', ownerId: null },
+      { username: 'zacpoole', password: 'admin',     email: '', role: 'admin', ownerId: 11   }
+    ];
+    let changed = false;
+    builtIn.forEach(def => {
+      if (!authData.users.find(u => u.username === def.username)) {
+        authData.users.push(def);
+        changed = true;
+      }
+    });
+    if (changed) saveAuthData(authData);
+  })();
+  initSession();
+  applyAuthUI();
+  render();
+  if (supabaseReady) {
+    subscribeRealtime();
+  } else if (SUPABASE_ENABLED) {
+    setDbStatus('offline');
+    showToast('&#x26A0; Running in offline mode — changes saved locally only', 6000);
+  }
+}
+boot();
 </script>
 </body>
 </html>
