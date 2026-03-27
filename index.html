@@ -1130,27 +1130,44 @@
 
   @media (max-width: 640px) {
 
-    /* Header — stack on two rows */
+    /* Header — single compact row */
     header {
-      height: auto;
-      flex-wrap: wrap;
-      padding: 10px 14px;
+      height: 54px;
+      padding: 0 12px;
+      flex-wrap: nowrap;
       gap: 8px;
     }
 
-    .logo { font-size: 22px; letter-spacing: 2px; }
+    .logo { font-size: 20px; letter-spacing: 1px; }
+    .logo-badge { display: none; }
 
-    .header-actions { width: 100%; justify-content: space-between; }
+    /* Hide desktop nav — drawer handles navigation */
+    .view-toggle { display: none; }
 
-    .view-btn { padding: 5px 8px; font-size: 11px; letter-spacing: 0; }
+    /* Collapse header-actions to fit one row */
+    .header-actions {
+      width: auto;
+      flex: 1;
+      justify-content: flex-end;
+      gap: 6px;
+    }
 
-    .btn { padding: 8px 12px; font-size: 12px; }
+    /* Hide addPlayer button text on mobile (keep it accessible via drawer) */
+    #addPlayerBtn { display: none !important; }
+
+    /* Shrink user chip */
+    .user-chip { gap: 6px; }
+    .user-chip-name { display: none; }
+    .user-chip-role { display: none; }
+
+    .btn { padding: 7px 10px; font-size: 12px; }
+    .btn-logout { padding: 7px 10px; font-size: 12px; }
 
     /* Hamburger — show on mobile */
     .mobile-menu-btn { display: flex; }
 
     /* Layout — sidebar hidden, content full width */
-    .layout { flex-direction: column; height: auto; min-height: calc(100vh - 110px); }
+    .layout { flex-direction: column; height: auto; min-height: calc(100vh - 54px); }
 
     .sidebar { display: none; }
 
@@ -1187,8 +1204,8 @@
 
     .team-header-full .btn-primary { width: 100%; text-align: center; }
 
-    /* Modal — full screen on mobile */
-    .modal {
+    /* Modal — bottom sheet on mobile (except search) */
+    .modal-overlay:not(:has(.search-modal)) .modal {
       width: 100%;
       max-width: 100%;
       max-height: 92vh;
@@ -1196,8 +1213,21 @@
       margin-top: auto;
     }
 
-    .modal-overlay {
+    .modal-overlay:not(:has(.search-modal)) {
       align-items: flex-end;
+    }
+
+    /* Search modal — top sheet on mobile */
+    .modal-overlay:has(.search-modal) {
+      align-items: flex-start;
+      padding-top: 0;
+    }
+    .search-modal {
+      margin-top: 0;
+      border-radius: 0 0 14px 14px;
+      max-height: 80vh;
+      width: 100%;
+      max-width: 100%;
     }
 
     /* Draft room — stack vertically */
@@ -1465,6 +1495,132 @@
     border-top: 1px solid var(--border);
   }
 
+  /* SEARCH */
+  .search-header-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+  }
+  .search-header-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .search-modal {
+    width: 560px;
+    max-width: 96vw;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    margin-top: 80px;
+    align-self: flex-start;
+    border-radius: 12px;
+  }
+
+  .modal-overlay:has(.search-modal) { align-items: flex-start; padding-top: 60px; }
+
+  .search-modal-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-modal-icon { flex-shrink: 0; color: var(--muted); }
+  .search-modal-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    caret-color: var(--accent);
+  }
+  .search-modal-input::placeholder { color: var(--muted); }
+  .search-modal-clear {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .search-modal-clear:hover { color: var(--text); }
+
+  .search-results {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .search-hint {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .search-empty {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .search-group-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    padding: 10px 16px 4px;
+    text-transform: uppercase;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+  }
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-radius: 0;
+  }
+  .search-result-item:hover,
+  .search-result-item.focused { background: var(--surface2); }
+  .search-result-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 22px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .search-result-name { flex: 1; font-size: 14px; }
+  .search-result-name mark {
+    background: none;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .search-result-owner {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .search-result-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .search-btn-label { display: none; }
+    .search-header-btn { padding: 8px; }
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1560,10 +1716,31 @@
       <span class="user-chip-name" id="userChipName"></span>
       <span class="user-chip-role" id="userChipRole"></span>
     </div>
+    <button class="btn search-header-btn" onclick="openSearchModal()" title="Search rosters" aria-label="Search rosters">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="search-btn-label">Search</span>
+    </button>
     <button class="btn" id="signInBtn" onclick="openLoginModal()">Sign In</button>
     <button class="btn-logout" id="logoutBtn" onclick="doLogout()" style="display:none">Sign Out</button>
   </div>
 </header>
+
+<!-- SEARCH MODAL -->
+<div class="modal-overlay" id="searchModal" onclick="handleSearchOverlayClick(event)">
+  <div class="modal search-modal">
+    <div class="search-modal-input-wrap">
+      <svg class="search-modal-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-modal-input" id="searchInput" placeholder="Search players, PTBNs, owners…"
+        oninput="runSearch(this.value)"
+        onkeydown="handleSearchKey(event)"
+        autocomplete="off" spellcheck="false" />
+      <button class="search-modal-clear" id="searchClear" onclick="clearSearch()" style="display:none">×</button>
+    </div>
+    <div id="searchResults" class="search-results">
+      <div class="search-hint">Start typing to search all rosters</div>
+    </div>
+  </div>
+</div>
 
 <!-- MOBILE DRAWER -->
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeMobileDrawer()"></div>
@@ -2411,20 +2588,35 @@ function renderMobileDrawer() {
       </div>`;
   });
 
-  if (currentUser) {
-    html += `<div class="drawer-section-label" style="margin-top:4px">Actions</div>`;
+  html += `<div class="drawer-section-label" style="margin-top:4px">Actions</div>`;
+
+  if (isAdmin()) {
     html += `
-      <div class="owner-item" onclick="drawerAction('trade')" style="color:var(--accent2)">
-        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">⇄</div>
-        <div class="owner-name">${isAdmin() ? 'Trade Builder' : 'Propose Trade'}</div>
+      <div class="owner-item" onclick="drawerAction('addPlayer')" style="color:var(--accent)">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">＋</div>
+        <div class="owner-name">Add Player</div>
       </div>`;
-    if (isAdmin() && pendingCount > 0) {
-      html += `
-        <div class="owner-item" onclick="drawerAction('pending')" style="color:var(--danger)">
-          <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--danger)">${pendingCount}</div>
-          <div class="owner-name" style="color:var(--danger)">Pending Trades</div>
-        </div>`;
-    }
+  }
+
+  html += `
+    <div class="owner-item" onclick="drawerAction('trade')" style="color:var(--accent2)">
+      <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:18px">⇄</div>
+      <div class="owner-name">${isAdmin() ? 'Trade Builder' : 'Propose Trade'}</div>
+    </div>`;
+
+  if (!currentUser) {
+    html += `
+      <div class="owner-item" onclick="drawerAction('signin')" style="color:var(--muted);font-size:12px;padding-left:52px">
+        Sign in to propose trades
+      </div>`;
+  }
+
+  if (isAdmin() && pendingCount > 0) {
+    html += `
+      <div class="owner-item" onclick="drawerAction('pending')" style="color:var(--danger)">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--danger)">${pendingCount}</div>
+        <div class="owner-name" style="color:var(--danger)">Pending Trades</div>
+      </div>`;
   }
 
   html += `<div class="drawer-section-label" style="margin-top:4px">Views</div>`;
@@ -2459,8 +2651,16 @@ function drawerSwitchTab(tab) {
 
 function drawerAction(action) {
   closeMobileDrawer();
-  if (action === 'trade') openTradeModal();
-  else if (action === 'pending') switchTab('admin');
+  if (action === 'trade') {
+    if (!currentUser) { openLoginModal(); return; }
+    openTradeModal();
+  } else if (action === 'pending') {
+    switchTab('admin');
+  } else if (action === 'addPlayer') {
+    openAddPlayerModal();
+  } else if (action === 'signin') {
+    openLoginModal();
+  }
 }
 
 function renderContent() {
@@ -2995,6 +3195,132 @@ function executeTrade() {
   closeModal('tradeModal');
   render();
   alert(`✅ Trade completed between ${owner1.name} and ${owner2.name}!`);
+}
+
+// ===== SEARCH =====
+let searchDebounce = null;
+
+function openSearchModal() {
+  document.getElementById('searchModal').classList.add('open');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  document.getElementById('searchResults').innerHTML = '<div class="search-hint">Start typing to search all rosters</div>';
+  setTimeout(() => document.getElementById('searchInput').focus(), 60);
+}
+
+function handleSearchOverlayClick(e) {
+  if (e.target === document.getElementById('searchModal')) {
+    closeModal('searchModal');
+  }
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  document.getElementById('searchResults').innerHTML = '<div class="search-hint">Start typing to search all rosters</div>';
+  document.getElementById('searchInput').focus();
+}
+
+function runSearch(query) {
+  clearTimeout(searchDebounce);
+  document.getElementById('searchClear').style.display = query ? 'block' : 'none';
+  if (!query.trim()) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-hint">Start typing to search all rosters</div>';
+    return;
+  }
+  searchDebounce = setTimeout(() => renderSearchResults(query.trim()), 120);
+}
+
+function highlightMatch(text, query) {
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return escHtml(text);
+  return escHtml(text.slice(0, idx))
+    + '<mark>' + escHtml(text.slice(idx, idx + query.length)) + '</mark>'
+    + escHtml(text.slice(idx + query.length));
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderSearchResults(query) {
+  const q = query.toLowerCase();
+  const results = [];
+
+  leagueData.owners.forEach((owner, ownerIdx) => {
+    owner.roster.forEach((name, rank) => {
+      if (name && name.toLowerCase().includes(q)) {
+        results.push({ type: 'player', name, rank: rank + 1, owner, ownerIdx });
+      }
+    });
+    owner.ptbn.forEach(name => {
+      if (name && name.toLowerCase().includes(q)) {
+        results.push({ type: 'ptbn', name, rank: '—', owner, ownerIdx });
+      }
+    });
+    // Also match owner names themselves
+    if (owner.name.toLowerCase().includes(q)) {
+      results.push({ type: 'owner', name: owner.name + "'s Farm Team", rank: '', owner, ownerIdx });
+    }
+  });
+
+  const container = document.getElementById('searchResults');
+  if (results.length === 0) {
+    container.innerHTML = `<div class="search-empty">No results for "<strong>${escHtml(query)}</strong>"</div>`;
+    return;
+  }
+
+  const players = results.filter(r => r.type === 'player');
+  const ptbns   = results.filter(r => r.type === 'ptbn');
+  const owners  = results.filter(r => r.type === 'owner');
+
+  const buildItems = (list) => list.map((r, idx) => {
+    const globalIdx = results.indexOf(r);
+    const color = OWNER_COLORS[r.ownerIdx % 12];
+    return `
+      <div class="search-result-item" data-idx="${globalIdx}" onclick="searchNavigate(${r.owner.id}, '${r.type}')">
+        <span class="search-result-rank">${r.type === 'owner' ? `<div class="owner-avatar ${color}" style="width:22px;height:22px;font-size:10px;border-radius:4px">${r.owner.name[0]}</div>` : r.rank}</span>
+        <span class="search-result-name">${highlightMatch(r.name, query)}</span>
+        ${r.type !== 'owner' ? `<span class="search-result-owner">${r.owner.name}</span>` : ''}
+        ${r.type === 'ptbn' ? `<span class="roster-tag tag-ptbn" style="font-size:9px">PTBN</span>` : ''}
+      </div>`;
+  }).join('');
+
+  let html = '';
+  if (owners.length)  html += `<div class="search-group-label">Owners</div>${buildItems(owners)}`;
+  if (players.length) html += `<div class="search-group-label">Prospects</div>${buildItems(players)}`;
+  if (ptbns.length)   html += `<div class="search-group-label">PTBN Picks</div>${buildItems(ptbns)}`;
+  html += `<div class="search-result-count">${results.length} result${results.length !== 1 ? 's' : ''}</div>`;
+
+  container.innerHTML = html;
+}
+
+function searchNavigate(ownerId, type) {
+  closeModal('searchModal');
+  selectOwner(ownerId);
+}
+
+function handleSearchKey(e) {
+  if (e.key === 'Escape') { closeModal('searchModal'); return; }
+  const items = document.querySelectorAll('.search-result-item');
+  if (!items.length) return;
+  const focused = document.querySelector('.search-result-item.focused');
+  let idx = focused ? [...items].indexOf(focused) : -1;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    items[idx >= 0] && items[idx].classList.remove('focused');
+    idx = Math.min(idx + 1, items.length - 1);
+    items[idx].classList.add('focused');
+    items[idx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    focused && focused.classList.remove('focused');
+    idx = Math.max(idx - 1, 0);
+    items[idx].classList.add('focused');
+    items[idx].scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && focused) {
+    focused.click();
+  }
 }
 
 // ===== UTILS =====
