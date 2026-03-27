@@ -2966,7 +2966,7 @@ function saveRoster() {
   const playerInputs = document.querySelectorAll('[data-type="player"]');
   const ptbnInputs = document.querySelectorAll('[data-type="ptbn"]');
 
-  owner.roster = Array.from(playerInputs).map(i => i.value.trim()).filter(v => v);
+  owner.roster = Array.from(playerInputs).map(i => i.value.trim());
   owner.ptbn = Array.from(ptbnInputs).map(i => i.value.trim()).filter(v => v);
 
   logActivity('roster', `Updated ${owner.name}'s roster (${owner.roster.filter(p=>p).length} prospects, ${owner.ptbn.length} picks)`);
