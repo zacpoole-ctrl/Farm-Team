@@ -565,13 +565,34 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 7px 10px;
+    transition: opacity 0.15s, border-color 0.15s;
+    cursor: default;
   }
+  .edit-roster-item.drag-over {
+    border-color: var(--accent);
+    border-style: dashed;
+  }
+  .edit-roster-item.dragging {
+    opacity: 0.35;
+  }
+
+  .drag-handle {
+    color: var(--muted);
+    cursor: grab;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .drag-handle:active { cursor: grabbing; }
 
   .edit-roster-num {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     color: var(--muted);
     width: 18px;
+    flex-shrink: 0;
   }
 
   .edit-roster-input {
@@ -595,6 +616,33 @@
     transition: color 0.15s;
   }
   .edit-roster-remove:hover { color: var(--danger); }
+
+  /* TRADE CONFIRM MODAL */
+  .trade-confirm-sides {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin: 12px 0;
+  }
+  .trade-confirm-side { flex: 1; }
+  .trade-confirm-owner {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .trade-confirm-item {
+    font-size: 13px;
+    padding: 5px 10px;
+    background: var(--surface2);
+    border-radius: 5px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
   .ptbn-badge {
     font-family: 'DM Mono', monospace;
@@ -1833,6 +1881,21 @@
   </div>
 </div>
 
+<!-- TRADE CONFIRM MODAL -->
+<div class="modal-overlay" id="tradeConfirmModal">
+  <div class="modal" style="width:460px">
+    <div class="modal-header">
+      <span class="modal-title">Confirm Trade Proposal</span>
+      <button class="modal-close" onclick="closeModal('tradeConfirmModal')">×</button>
+    </div>
+    <div class="modal-body" id="tradeConfirmBody"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('tradeConfirmModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTradeProposal()">Submit Proposal</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHANGE PASSWORD MODAL -->
 <div class="modal-overlay" id="changePasswordModal">
   <div class="modal">
@@ -2910,28 +2973,29 @@ function selectOwner(id) {
 function openEditModal(ownerId) {
   editingOwnerId = ownerId;
   const owner = leagueData.owners.find(o => o.id === ownerId);
-  const i = leagueData.owners.indexOf(owner);
 
   document.getElementById('editModalTitle').textContent = `Edit – ${owner.name}'s Roster`;
 
-  let html = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:12px;letter-spacing:1px">PROSPECTS</div>`;
+  let html = `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:8px;letter-spacing:1px">PROSPECTS <span style="font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0">— drag ⠿ to reorder</span></div>`;
   html += `<div class="edit-roster-list" id="editRosterList">`;
   owner.roster.forEach((p, j) => {
     html += `
-      <div class="edit-roster-item">
+      <div class="edit-roster-item" draggable="true" data-list="roster" data-idx="${j}">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <span class="edit-roster-num">${j+1}</span>
-        <input class="edit-roster-input" value="${p}" data-type="player" data-idx="${j}" />
+        <input class="edit-roster-input" value="${p}" data-type="player" data-idx="${j}" placeholder="— empty slot —" />
         <button class="edit-roster-remove" onclick="removeRosterItem('player', ${j})">×</button>
       </div>`;
   });
   html += `</div>`;
   html += `<button class="btn" style="margin-top:10px;width:100%;font-size:12px" onclick="addRosterItem('player')">+ Add Prospect</button>`;
 
-  html += `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin:20px 0 12px;letter-spacing:1px">PTBN PICKS</div>`;
+  html += `<div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin:20px 0 8px;letter-spacing:1px">PTBN PICKS</div>`;
   html += `<div class="edit-roster-list" id="editPtbnList">`;
   owner.ptbn.forEach((p, j) => {
     html += `
-      <div class="edit-roster-item">
+      <div class="edit-roster-item" draggable="true" data-list="ptbn" data-idx="${j}">
+        <span class="drag-handle" title="Drag to reorder">⠿</span>
         <span class="edit-roster-num">—</span>
         <input class="edit-roster-input" value="${p}" data-type="ptbn" data-idx="${j}" />
         <button class="edit-roster-remove" onclick="removeRosterItem('ptbn', ${j})">×</button>
@@ -2942,6 +3006,104 @@ function openEditModal(ownerId) {
 
   document.getElementById('editModalBody').innerHTML = html;
   document.getElementById('editModal').classList.add('open');
+
+  initRosterDrag('editRosterList');
+  initRosterDrag('editPtbnList');
+}
+
+// ===== ROSTER DRAG & DROP =====
+let dragSrc = null;
+
+function initRosterDrag(listId) {
+  const list = document.getElementById(listId);
+  if (!list) return;
+
+  list.querySelectorAll('.edit-roster-item').forEach(item => {
+    // Desktop drag events
+    item.addEventListener('dragstart', e => {
+      dragSrc = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      dragSrc = null;
+      item.classList.remove('dragging');
+      list.querySelectorAll('.edit-roster-item').forEach(el => el.classList.remove('drag-over'));
+      refreshRosterNums(list);
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === item) return;
+      list.querySelectorAll('.edit-roster-item').forEach(el => el.classList.remove('drag-over'));
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === item) return;
+      const items = [...list.querySelectorAll('.edit-roster-item')];
+      const fromIdx = items.indexOf(dragSrc);
+      const toIdx = items.indexOf(item);
+      if (fromIdx === toIdx) return;
+      // Reorder in DOM
+      if (fromIdx < toIdx) {
+        list.insertBefore(dragSrc, item.nextSibling);
+      } else {
+        list.insertBefore(dragSrc, item);
+      }
+      item.classList.remove('drag-over');
+      refreshRosterNums(list);
+    });
+
+    // Touch drag (mobile)
+    let touchClone = null, touchOriginY = 0;
+    const handle = item.querySelector('.drag-handle');
+    handle.addEventListener('touchstart', e => {
+      touchOriginY = e.touches[0].clientY;
+      item.classList.add('dragging');
+      touchClone = item.cloneNode(true);
+      touchClone.style.cssText = `position:fixed;left:0;right:0;z-index:9999;opacity:0.85;pointer-events:none;border-color:var(--accent);`;
+      touchClone.style.top = item.getBoundingClientRect().top + 'px';
+      document.body.appendChild(touchClone);
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const dy = e.touches[0].clientY - touchOriginY;
+      touchClone.style.top = (item.getBoundingClientRect().top + dy) + 'px';
+
+      const mid = e.touches[0].clientY;
+      const siblings = [...list.querySelectorAll('.edit-roster-item')].filter(el => el !== item);
+      list.querySelectorAll('.edit-roster-item').forEach(el => el.classList.remove('drag-over'));
+      const target = siblings.find(el => {
+        const r = el.getBoundingClientRect();
+        return mid >= r.top && mid <= r.bottom;
+      });
+      if (target) target.classList.add('drag-over');
+    }, { passive: false });
+
+    handle.addEventListener('touchend', e => {
+      if (touchClone) { touchClone.remove(); touchClone = null; }
+      item.classList.remove('dragging');
+      const target = list.querySelector('.edit-roster-item.drag-over');
+      if (target && target !== item) {
+        const items = [...list.querySelectorAll('.edit-roster-item')];
+        const fromIdx = items.indexOf(item);
+        const toIdx = items.indexOf(target);
+        if (fromIdx < toIdx) list.insertBefore(item, target.nextSibling);
+        else list.insertBefore(item, target);
+        target.classList.remove('drag-over');
+      }
+      refreshRosterNums(list);
+    }, { passive: true });
+  });
+}
+
+function refreshRosterNums(list) {
+  const isRoster = list.id === 'editRosterList';
+  list.querySelectorAll('.edit-roster-item').forEach((item, i) => {
+    const num = item.querySelector('.edit-roster-num');
+    if (num) num.textContent = isRoster ? (i + 1) : '—';
+  });
 }
 
 function addRosterItem(type) {
@@ -2966,11 +3128,12 @@ function removeRosterItem(type, idx) {
 
 function saveRoster() {
   const owner = leagueData.owners.find(o => o.id === editingOwnerId);
-  const playerInputs = document.querySelectorAll('[data-type="player"]');
-  const ptbnInputs = document.querySelectorAll('[data-type="ptbn"]');
 
-  owner.roster = Array.from(playerInputs).map(i => i.value.trim());
-  owner.ptbn = Array.from(ptbnInputs).map(i => i.value.trim()).filter(v => v);
+  // Read in DOM order (respects drag reordering)
+  const rosterList = document.getElementById('editRosterList');
+  const ptbnList   = document.getElementById('editPtbnList');
+  owner.roster = Array.from(rosterList.querySelectorAll('.edit-roster-input')).map(i => i.value.trim());
+  owner.ptbn   = Array.from(ptbnList.querySelectorAll('.edit-roster-input')).map(i => i.value.trim()).filter(v => v);
 
   logActivity('roster', `Updated ${owner.name}'s roster (${owner.roster.filter(p=>p).length} prospects, ${owner.ptbn.length} picks)`);
   save();
@@ -3027,6 +3190,34 @@ function proposeTrade() {
   const owner1 = leagueData.owners.find(o => o.id === s1.ownerId);
   const owner2 = leagueData.owners.find(o => o.id === s2.ownerId);
 
+  const buildItems = (items) => items.length
+    ? items.map(it => `<div class="trade-confirm-item">${it.label}${it.type==='ptbn'?` <span class="roster-tag tag-ptbn" style="font-size:9px">PTBN</span>`:''}</div>`).join('')
+    : `<div class="trade-confirm-item" style="color:var(--muted)">Nothing</div>`;
+
+  document.getElementById('tradeConfirmBody').innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Review the trade below before submitting for admin approval.</p>
+    <div class="trade-confirm-sides">
+      <div class="trade-confirm-side">
+        <div class="trade-confirm-owner">${owner1.name} sends</div>
+        ${buildItems(s1.items)}
+      </div>
+      <div style="font-size:22px;color:var(--accent);align-self:center;flex-shrink:0">⇄</div>
+      <div class="trade-confirm-side">
+        <div class="trade-confirm-owner">${owner2.name} sends</div>
+        ${buildItems(s2.items)}
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:4px">Once submitted, an admin will review and either approve or reject this trade.</p>`;
+
+  document.getElementById('tradeConfirmModal').classList.add('open');
+}
+
+function submitTradeProposal() {
+  const s1 = tradeState.side1;
+  const s2 = tradeState.side2;
+  const owner1 = leagueData.owners.find(o => o.id === s1.ownerId);
+  const owner2 = leagueData.owners.find(o => o.id === s2.ownerId);
+
   const proposals = loadProposals();
   proposals.push({
     id: Date.now(),
@@ -3038,6 +3229,7 @@ function proposeTrade() {
   });
   saveProposals(proposals);
   logActivity('trade', `<strong>${currentUser.username}</strong> proposed a trade: ${owner1.name} ↔ ${owner2.name} (pending review)`);
+  closeModal('tradeConfirmModal');
   closeModal('tradeModal');
   render();
   alert(`✅ Trade proposal submitted! An admin will review it.`);
